@@ -1,6 +1,53 @@
 # 🛍️ E-commerce Store (Full-Stack)
 
+[![React](https://img.shields.io/badge/React-18+-blue)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue)](https://www.postgresql.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.0-blueviolet)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue)](https://www.docker.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black)](https://vercel.com/)
+[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7)](https://render.com/)
+
 A production-ready full-stack e-commerce web application built with modern technologies, featuring a separate admin panel and API versioning.
+
+> 🔗 **Backend API**: [E-commerce API (Project 3)](https://github.com/dera-delis/E-commerce-API)
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    subgraph "Frontend Layer"
+        A[Customer Storefront<br/>React + Tailwind]
+        B[Admin Panel<br/>React + Tailwind<br/>Port 5030]
+    end
+    
+    subgraph "Backend Layer"
+        C[FastAPI Backend<br/>Port 8000]
+        D[E-commerce API<br/>Project 3]
+    end
+    
+    subgraph "Data Layer"
+        E[(PostgreSQL<br/>Database)]
+    end
+    
+    subgraph "Deployment"
+        F[Vercel<br/>Frontend]
+        G[Render/Northflank<br/>Backend]
+        H[Docker<br/>Local Development]
+    end
+    
+    A -->|API calls| C
+    B -->|API calls| C
+    C -->|Data requests| D
+    C -->|Direct queries| E
+    D -->|Data storage| E
+    
+    A -.->|Deploy| F
+    C -.->|Deploy| G
+    A -.->|Dev| H
+    C -.->|Dev| H
+    E -.->|Dev| H
+```
 
 ## ✨ Features
 
@@ -57,6 +104,26 @@ A production-ready full-stack e-commerce web application built with modern techn
 - **Vercel** - Frontend deployment
 - **Northflank/Render** - Backend deployment
 
+## 📸 Screenshots
+
+### Homepage
+![Homepage](frontend/public/screenshots/homepage.png)
+
+### Product Listing
+![Product Listing](frontend/public/screenshots/listing.png)
+
+### Product Detail
+![Product Detail](frontend/public/screenshots/product-detail.png)
+
+### Cart Drawer
+![Cart Drawer](frontend/public/screenshots/cart-drawer.png)
+
+### Checkout
+![Checkout](frontend/public/screenshots/checkout.png)
+
+### Admin Dashboard
+![Admin Dashboard](admin-frontend/public/screenshots/admin-dashboard.png)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -68,8 +135,8 @@ A production-ready full-stack e-commerce web application built with modern techn
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd ecommerce-store
+   git clone https://github.com/dera-delis/E-commerce-Store.git
+   cd E-commerce-Store
    ```
 
 2. **Environment Setup**
@@ -291,6 +358,38 @@ GET  /api/v1/admin/orders
 - **Professional Architecture**: Demonstrates enterprise-level thinking
 
 For detailed API versioning documentation, see [API_VERSIONING.md](API_VERSIONING.md).
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+pytest -v
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+### Admin Frontend Tests
+```bash
+cd admin-frontend
+npm test
+```
+
+### Docker Tests
+```bash
+# Test all services
+docker-compose up -d
+docker-compose ps
+
+# Test individual services
+docker-compose up -d postgres
+docker-compose up -d backend
+docker-compose up -d frontend
+```
 
 ## 🤝 Contributing
 
