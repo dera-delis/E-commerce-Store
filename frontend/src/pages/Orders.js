@@ -15,7 +15,9 @@ const Orders = () => {
 
   const loadOrders = async () => {
     try {
+      console.log('Loading orders...');
       const response = await api.get(endpoints.orders.list);
+      console.log('Orders response:', response.data);
       setOrders(response.data.orders || []);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -26,16 +28,16 @@ const Orders = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
-      processing: { color: 'bg-blue-100 text-blue-800', label: 'Processing' },
-      shipped: { color: 'bg-purple-100 text-purple-800', label: 'Shipped' },
-      delivered: { color: 'bg-success-100 text-success-800', label: 'Delivered' },
-      cancelled: { color: 'bg-accent-100 text-accent-800', label: 'Cancelled' }
+      pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending' },
+      processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Processing' },
+      shipped: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Shipped' },
+      delivered: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Delivered' },
+      cancelled: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Cancelled' }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
     return (
-      <span className={`badge ${config.color}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${config.color}`}>
         {config.label}
       </span>
     );
@@ -81,12 +83,12 @@ const Orders = () => {
         ) : (
           <div className="space-y-6">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow-soft overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
+              <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">Order #{order.id}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                      <p className="text-sm text-gray-600 mt-1">
                         Placed on {new Date(order.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -95,21 +97,29 @@ const Orders = () => {
                 </div>
                 
                 <div className="p-6">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {order.items.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-4">
-                        <img
-                          src={item.image_url || 'https://via.placeholder.com/60x60?text=Product'}
-                          alt={item.name}
-                          className="w-15 h-15 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.name}</h4>
+                      <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center shadow-sm border border-gray-200 flex-shrink-0">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-14 h-14 object-cover rounded-md"
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-lg">📦</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         </div>
-                        <span className="font-medium text-gray-900">
-                          {formatPrice(item.subtotal)}
-                        </span>
+                        <div className="text-right flex-shrink-0">
+                          <span className="font-semibold text-gray-900 text-lg">
+                            {formatPrice(item.subtotal)}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>

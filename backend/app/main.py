@@ -1,16 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
+import os
 from app.config import settings
-from app.routers import auth, products, cart, orders, admin
+from app.routers import auth, products, cart, orders, admin, upload
+from app.database import init_db
 
 # Application lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting E-commerce Store Backend...")
+    print("📊 Initializing database...")
+    init_db()
     yield
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...")
@@ -46,6 +51,11 @@ app.include_router(products.router, prefix="/api/v1/products", tags=["Products"]
 app.include_router(cart.router, prefix="/api/v1/cart", tags=["Cart"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["Orders"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(upload.router, prefix="/api/v1/upload", tags=["Upload"])
+
+# Mount static files for uploads
+if os.path.exists("uploads"):
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Health check endpoint
 @app.get("/health")

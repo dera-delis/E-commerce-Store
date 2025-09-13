@@ -11,6 +11,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
@@ -18,6 +19,14 @@ const ProductDetail = () => {
 
   useEffect(() => {
     loadProduct();
+  }, [id]);
+
+  // Check if product is favorited on component mount
+  useEffect(() => {
+    if (id) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      setIsFavorited(favorites.includes(id));
+    }
   }, [id]);
 
   const loadProduct = async () => {
@@ -31,6 +40,30 @@ const ProductDetail = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToggleFavorite = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let newFavorites;
+    
+    if (isFavorited) {
+      // Remove from favorites
+      newFavorites = favorites.filter(favId => favId !== id);
+    } else {
+      // Add to favorites
+      newFavorites = [...favorites, id];
+    }
+    
+    localStorage.setItem('favorites', JSON.stringify(newFavorites));
+    setIsFavorited(!isFavorited);
+    
+    // Dispatch custom event to update header count in real-time
+    window.dispatchEvent(new CustomEvent('favoritesUpdated'));
   };
 
   const handleAddToCart = async () => {
@@ -192,9 +225,23 @@ const ProductDetail = () => {
                     )}
                   </button>
 
-                  <button className="p-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
-                    <Heart size={20} />
-                  </button>
+                  {/* Favorite Button - Only show when logged in */}
+                  {isAuthenticated && (
+                    <button 
+                      onClick={handleToggleFavorite}
+                      className={`p-3 border rounded-lg transition-colors ${
+                        isFavorited 
+                          ? 'border-red-500 bg-red-50 text-red-600 hover:bg-red-100' 
+                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Heart 
+                        size={20} 
+                        className={isFavorited ? 'fill-current' : ''} 
+                      />
+                    </button>
+                  )}
                 </div>
               </div>
             )}

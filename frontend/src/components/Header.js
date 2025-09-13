@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -8,15 +8,22 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, logout } = useAuth();
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const { user, logout, isAuthenticated } = useAuth();
   const { cartItems } = useCart();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      // Reset all parameters and start fresh search
+      navigate(`/products?page=1&limit=12&sort_by=name&sort_order=asc&search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(''); // Clear search after navigating
     }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
   };
 
   const handleLogout = () => {
@@ -26,6 +33,43 @@ const Header = () => {
   };
 
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  
+  // Update favorites count in real-time
+  useEffect(() => {
+    const updateFavoritesCount = () => {
+      if (isAuthenticated) {
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        setFavoritesCount(favorites.length);
+      } else {
+        setFavoritesCount(0);
+        // Don't clear favorites - let them persist across sessions
+      }
+    };
+
+    // Initial update
+    updateFavoritesCount();
+
+    // Listen for storage changes (when favorites are updated in other tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === 'favorites') {
+        updateFavoritesCount();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events (when favorites are updated in same tab)
+    const handleFavoritesChange = () => {
+      updateFavoritesCount();
+    };
+
+    window.addEventListener('favoritesUpdated', handleFavoritesChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('favoritesUpdated', handleFavoritesChange);
+    };
+  }, [isAuthenticated]);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-medium border-b border-gray-200">
@@ -51,20 +95,50 @@ const Header = () => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                >
-                  <Search size={20} />
-                </button>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Clear search"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Search"
+                  >
+                    <Search size={20} />
+                  </button>
+                </div>
               </div>
             </form>
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
+            {/* Favorites Icon - Only show when logged in */}
+            {isAuthenticated && (
+              <Link
+                to="/favorites"
+                className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors"
+              >
+                <Heart size={24} />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {favoritesCount > 99 ? '99+' : favoritesCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Cart Icon */}
             <Link
               to="/cart"
@@ -157,14 +231,29 @@ const Header = () => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-4 pr-20 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                >
-                  <Search size={20} />
-                </button>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Clear search"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Search"
+                  >
+                    <Search size={20} />
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -181,6 +270,15 @@ const Header = () => {
               >
                 All Products
               </Link>
+              {isAuthenticated && (
+                <Link
+                  to="/favorites"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Favorites {favoritesCount > 0 && `(${favoritesCount})`}
+                </Link>
+              )}
               <Link
                 to="/orders"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"

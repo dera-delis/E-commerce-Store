@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,39 @@ const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  // Check if product is favorited on component mount
+  useEffect(() => {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    setIsFavorited(favorites.includes(product.id));
+  }, [product.id]);
+
+  const handleToggleFavorite = () => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
+    }
+
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let newFavorites;
+    
+    if (isFavorited) {
+      // Remove from favorites
+      newFavorites = favorites.filter(id => id !== product.id);
+    } else {
+      // Add to favorites
+      newFavorites = [...favorites, product.id];
+    }
+    
+    localStorage.setItem('favorites', JSON.stringify(newFavorites));
+    console.log('Saved favorites to localStorage:', newFavorites);
+    setIsFavorited(!isFavorited);
+    
+    // Dispatch custom event to update header count in real-time
+    window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+  };
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -68,10 +101,27 @@ const ProductCard = ({ product }) => {
           />
         </Link>
         
-        {/* Wishlist Button */}
-        <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-soft opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-50">
-          <Heart size={16} className="text-gray-600" />
-        </button>
+        {/* Wishlist Button - Only show when logged in */}
+        {isAuthenticated && (
+          <button 
+            onClick={handleToggleFavorite}
+            className={`absolute top-2 right-2 p-2 rounded-full shadow-soft opacity-0 group-hover:opacity-100 transition-all duration-200 ${
+              isFavorited 
+                ? 'bg-red-500 hover:bg-red-600' 
+                : 'bg-white hover:bg-gray-50'
+            }`}
+            title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Heart 
+              size={16} 
+              className={`${
+                isFavorited 
+                  ? 'text-white fill-current' 
+                  : 'text-gray-600'
+              }`} 
+            />
+          </button>
+        )}
         
         {/* Stock Badge */}
         {product.stock <= 10 && product.stock > 0 && (

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from typing import List, Optional
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import Product as ProductModel
 
 router = APIRouter()
 
@@ -92,6 +95,42 @@ mock_products = [
         "stock": 15,
         "rating": 4.8,
         "review_count": 67
+    },
+    {
+        "id": "6",
+        "name": "Leather Handbag",
+        "description": "Elegant leather handbag perfect for everyday use",
+        "price": 89.99,
+        "currency": "USD",
+        "category": "Clothing",
+        "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
+        "stock": 30,
+        "rating": 4.4,
+        "review_count": 92
+    },
+    {
+        "id": "7",
+        "name": "Canvas Backpack",
+        "description": "Durable canvas backpack for travel and daily adventures",
+        "price": 45.99,
+        "currency": "USD",
+        "category": "Clothing",
+        "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
+        "stock": 40,
+        "rating": 4.6,
+        "review_count": 156
+    },
+    {
+        "id": "8",
+        "name": "Cotton Tote Bag",
+        "description": "Eco-friendly cotton tote bag for shopping and beach trips",
+        "price": 15.99,
+        "currency": "USD",
+        "category": "Clothing",
+        "image_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
+        "stock": 60,
+        "rating": 4.2,
+        "review_count": 78
     }
 ]
 
@@ -112,51 +151,72 @@ async def get_products(
     min_price: Optional[float] = Query(None, ge=0, description="Minimum price"),
     max_price: Optional[float] = Query(None, ge=0, description="Maximum price"),
     sort_by: Optional[str] = Query("name", description="Sort by field"),
-    sort_order: Optional[str] = Query("asc", description="Sort order (asc/desc)")
+    sort_order: Optional[str] = Query("asc", description="Sort order (asc/desc)"),
+    db: Session = Depends(get_db)
 ):
     """Get products with filtering, searching, and pagination"""
     try:
-        # Filter products
-        filtered_products = mock_products.copy()
+        # Start with base query
+        query = db.query(ProductModel)
         
         # Apply category filter
         if category:
-            filtered_products = [p for p in filtered_products if p["category"].lower() == category.lower()]
+            query = query.filter(ProductModel.category.ilike(f"%{category}%"))
         
         # Apply search filter
         if search:
-            search_lower = search.lower()
-            filtered_products = [
-                p for p in filtered_products 
-                if search_lower in p["name"].lower() or search_lower in p["description"].lower()
-            ]
+            search_term = f"%{search}%"
+            query = query.filter(
+                ProductModel.name.ilike(search_term) | 
+                ProductModel.description.ilike(search_term)
+            )
         
         # Apply price filters
         if min_price is not None:
-            filtered_products = [p for p in filtered_products if p["price"] >= min_price]
+            query = query.filter(ProductModel.price >= min_price)
         if max_price is not None:
-            filtered_products = [p for p in filtered_products if p["price"] <= max_price]
+            query = query.filter(ProductModel.price <= max_price)
         
         # Apply sorting
-        if sort_by in ["name", "price", "rating"]:
-            reverse = sort_order.lower() == "desc"
-            filtered_products.sort(key=lambda x: x[sort_by], reverse=reverse)
+        if sort_by == "name":
+            query = query.order_by(ProductModel.name.asc() if sort_order.lower() == "asc" else ProductModel.name.desc())
+        elif sort_by == "price":
+            query = query.order_by(ProductModel.price.asc() if sort_order.lower() == "asc" else ProductModel.price.desc())
+        elif sort_by == "rating":
+            query = query.order_by(ProductModel.rating.asc() if sort_order.lower() == "asc" else ProductModel.rating.desc())
+        else:
+            query = query.order_by(ProductModel.name.asc())
+        
+        # Get total count
+        total = query.count()
         
         # Apply pagination
-        total = len(filtered_products)
-        start_idx = (page - 1) * limit
-        end_idx = start_idx + limit
-        paginated_products = filtered_products[start_idx:end_idx]
+        offset = (page - 1) * limit
+        db_products = query.offset(offset).limit(limit).all()
         
         # Convert to Product objects
-        products = [Product(**p) for p in paginated_products]
+        products = []
+        for db_product in db_products:
+            product = Product(
+                id=db_product.id,
+                name=db_product.name,
+                description=db_product.description,
+                price=db_product.price,
+                currency="USD",
+                category=db_product.category,
+                image_url=db_product.image_url,
+                stock=db_product.stock,
+                rating=db_product.rating,
+                review_count=0  # We can add review count later
+            )
+            products.append(product)
         
         return ProductList(
             products=products,
             total=total,
             page=page,
             limit=limit,
-            has_next=end_idx < total,
+            has_next=offset + limit < total,
             has_prev=page > 1
         )
         
@@ -173,26 +233,57 @@ async def get_categories():
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/featured", response_model=List[Product])
-async def get_featured_products():
+async def get_featured_products(db: Session = Depends(get_db)):
     """Get featured products (highly rated or popular)"""
     try:
-        # Simple return without sorting to test
-        return [Product(**p) for p in mock_products[:3]]
+        # Get top 3 products by rating
+        db_products = db.query(ProductModel).order_by(ProductModel.rating.desc()).limit(3).all()
+        
+        products = []
+        for db_product in db_products:
+            product = Product(
+                id=db_product.id,
+                name=db_product.name,
+                description=db_product.description,
+                price=db_product.price,
+                currency="USD",
+                category=db_product.category,
+                image_url=db_product.image_url,
+                stock=db_product.stock,
+                rating=db_product.rating,
+                review_count=0
+            )
+            products.append(product)
+        
+        return products
     except Exception as e:
         print(f"Error in featured products: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/{product_id}", response_model=Product)
-async def get_product(product_id: str):
+async def get_product(product_id: str, db: Session = Depends(get_db)):
     """Get product by ID"""
     try:
-        # Find product by ID
-        product = next((p for p in mock_products if p["id"] == product_id), None)
+        # Find product by ID in database
+        db_product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
         
-        if not product:
+        if not db_product:
             raise HTTPException(status_code=404, detail="Product not found")
         
-        return Product(**product)
+        product = Product(
+            id=db_product.id,
+            name=db_product.name,
+            description=db_product.description,
+            price=db_product.price,
+            currency="USD",
+            category=db_product.category,
+            image_url=db_product.image_url,
+            stock=db_product.stock,
+            rating=db_product.rating,
+            review_count=0
+        )
+        
+        return product
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

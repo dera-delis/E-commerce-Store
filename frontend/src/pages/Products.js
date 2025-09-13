@@ -71,6 +71,12 @@ const Products = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
+    setSearchQuery(''); // Clear search after searching
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setCurrentPage(1);
   };
 
   const handleFilterChange = () => {
@@ -166,14 +172,29 @@ const Products = () => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-4 pr-20 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                >
-                  <Search size={20} />
-                </button>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Clear search"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Search"
+                  >
+                    <Search size={20} />
+                  </button>
+                </div>
               </form>
             </div>
 

@@ -10,6 +10,7 @@ import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
+import Favorites from './pages/Favorites';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -18,7 +19,7 @@ import CartDrawer from './components/CartDrawer';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <CartProvider>
           <div className="min-h-screen flex flex-col">
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/favorites" element={<Favorites />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />

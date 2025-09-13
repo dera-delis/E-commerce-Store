@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List
 from app.routers.auth import verify_token
+from app.database import get_db
+from app.models import Product
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -12,6 +15,7 @@ class CartItem(BaseModel):
     price: float
     quantity: int
     subtotal: float
+    image_url: str = None
 
 class CartResponse(BaseModel):
     items: List[CartItem]
@@ -53,16 +57,30 @@ async def get_cart(current_user_id: str = Depends(verify_token)):
     )
 
 @router.post("/add", response_model=CartResponse)
-async def add_to_cart(request: AddToCartRequest, current_user_id: str = Depends(verify_token)):
+async def add_to_cart(request: AddToCartRequest, current_user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
     """Add item to cart"""
     cart = get_user_cart(current_user_id)
     
-    # Mock product data
-    mock_product = {
-        "id": request.product_id,
-        "name": f"Product {request.product_id}",
-        "price": 29.99
-    }
+    # Get real product data from database
+    try:
+        product = db.query(Product).filter(Product.id == request.product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        
+        product_data = {
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+            "image_url": product.image_url
+        }
+    except Exception as e:
+        # Fallback to mock data if product not found
+        product_data = {
+            "id": request.product_id,
+            "name": f"Product {request.product_id}",
+            "price": 29.99,
+            "image_url": None
+        }
     
     if request.product_id in cart["items"]:
         cart["items"][request.product_id]["quantity"] += request.quantity
@@ -70,10 +88,11 @@ async def add_to_cart(request: AddToCartRequest, current_user_id: str = Depends(
     else:
         cart["items"][request.product_id] = {
             "product_id": request.product_id,
-            "name": mock_product["name"],
-            "price": mock_product["price"],
+            "name": product_data["name"],
+            "price": product_data["price"],
             "quantity": request.quantity,
-            "subtotal": mock_product["price"] * request.quantity
+            "subtotal": product_data["price"] * request.quantity,
+            "image_url": product_data.get("image_url", None)
         }
     
     cart = get_user_cart(current_user_id)

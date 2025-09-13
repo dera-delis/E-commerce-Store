@@ -9,7 +9,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   
-  const { login, error } = useAuth();
+  const { login, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -17,28 +17,25 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    
+    // Clear error when user starts typing
+    if (error) {
+      clearError();
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
-    try {
-      const result = await login(formData.email, formData.password);
-      if (result.success) {
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      setLoading(false);
+    const result = await login(formData.email, formData.password);
+    if (result.success) {
+      navigate('/');
     }
+    
+    setLoading(false);
   };
 
-  // Debug: Log error state changes
-  useEffect(() => {
-    console.log('Login component error prop changed:', error);
-  }, [error]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -62,18 +59,28 @@ const Login = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-soft sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 bg-red-100 border-2 border-red-400 rounded-lg p-4 animate-pulse">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="mb-4 bg-red-100 border-2 border-red-400 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
+                    <p className="text-sm text-red-700 mt-1">{error}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={clearError}
+                  className="flex-shrink-0 ml-4 text-red-500 hover:text-red-700 transition-colors"
+                  title="Dismiss error"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
-                  <p className="text-sm text-red-700 mt-1">{error}</p>
-                </div>
-                {/* Error stays visible until successful login or navigation */}
+                </button>
               </div>
             </div>
           )}

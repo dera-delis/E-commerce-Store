@@ -50,11 +50,17 @@ const Cart = () => {
               <div className="divide-y divide-gray-200">
                 {cartItems.map((item) => (
                   <div key={item.product_id} className="p-6 flex items-center space-x-4">
-                    <img
-                      src={item.image_url || 'https://via.placeholder.com/80x80?text=Product'}
-                      alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
+                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-lg">📦</span>
+                      )}
+                    </div>
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-medium text-gray-900 truncate">{item.name}</h3>

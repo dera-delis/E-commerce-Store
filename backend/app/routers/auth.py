@@ -5,9 +5,16 @@ from typing import Optional
 from app.config import JWT_CONFIG
 from datetime import datetime, timedelta
 import jwt
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import User
+from passlib.context import CryptContext
 
 router = APIRouter()
 security = HTTPBearer()
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Pydantic models
 class UserLogin(BaseModel):
@@ -75,22 +82,28 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/signup", response_model=UserResponse)
-async def signup(user_data: UserSignup):
+async def signup(user_data: UserSignup, db: Session = Depends(get_db)):
     """User registration endpoint"""
     # Check if user already exists
-    if user_data.email in users_db:
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
     
-    # Create user (in production, hash password and save to database)
-    user_id = f"user_{len(users_db) + 1}"
-    users_db[user_data.email] = {
-        "id": user_id,
-        "email": user_data.email,
-        "password": user_data.password,  # Hash in production
-        "first_name": user_data.first_name,
-        "last_name": user_data.last_name,
-        "role": "customer"
-    }
+    # Create user with hashed password
+    user_id = f"user_{int(datetime.utcnow().timestamp())}"
+    hashed_password = pwd_context.hash(user_data.password)
+    
+    new_user = User(
+        id=user_id,
+        email=user_data.email,
+        name=f"{user_data.first_name} {user_data.last_name}",
+        password_hash=hashed_password,
+        role="customer"
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     
     # Create access token
     access_token = create_access_token(data={"sub": user_id})
@@ -106,27 +119,31 @@ async def signup(user_data: UserSignup):
     )
 
 @router.post("/login", response_model=UserResponse)
-async def login(user_data: UserLogin):
+async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """User login endpoint"""
     # Check if user exists
-    if user_data.email not in users_db:
+    user = db.query(User).filter(User.email == user_data.email).first()
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    user = users_db[user_data.email]
-    
-    # Check password (in production, verify hashed password)
-    if user["password"] != user_data.password:
+    # Check password
+    if not pwd_context.verify(user_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     # Create access token
-    access_token = create_access_token(data={"sub": user["id"]})
+    access_token = create_access_token(data={"sub": user.id})
+    
+    # Split name into first and last name
+    name_parts = user.name.split(" ", 1)
+    first_name = name_parts[0] if name_parts else ""
+    last_name = name_parts[1] if len(name_parts) > 1 else ""
     
     return UserResponse(
-        id=user["id"],
-        email=user["email"],
-        first_name=user["first_name"],
-        last_name=user["last_name"],
-        role=user["role"],
+        id=user.id,
+        email=user.email,
+        first_name=first_name,
+        last_name=last_name,
+        role=user.role,
         access_token=access_token,
         token_type="bearer"
     )
@@ -138,20 +155,26 @@ async def logout():
     return {"message": "Successfully logged out"}
 
 @router.get("/me", response_model=dict)
-async def get_current_user(current_user_id: str = Depends(verify_token)):
+async def get_current_user(current_user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
     """Get current user information"""
     try:
         # Find user by ID
-        for email, user in users_db.items():
-            if user["id"] == current_user_id:
-                return {
-                    "id": user["id"],
-                    "email": user["email"],
-                    "first_name": user["first_name"],
-                    "last_name": user["last_name"],
-                    "role": user["role"]
-                }
-        raise HTTPException(status_code=404, detail="User not found")
+        user = db.query(User).filter(User.id == current_user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Split name into first and last name
+        name_parts = user.name.split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        return {
+            "id": user.id,
+            "email": user.email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "role": user.role
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
