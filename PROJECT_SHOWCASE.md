@@ -217,6 +217,13 @@ This e-commerce application showcases proficiency in modern full-stack developme
 
 The project is ready for production deployment and demonstrates the skills needed for modern web development roles.
 
+## 👨‍💻 **Developer**
+
+**Dera Delis**
+- GitHub: [@dera-delis](https://github.com/dera-delis)
+- LinkedIn: [Dera Delis](https://www.linkedin.com/in/dera-delis/)
+- WhatsApp: +234 704 907 3197
+
 ---
 
 **Built with ❤️ and modern web technologies**
