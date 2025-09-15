@@ -22,7 +22,12 @@ class Settings(BaseSettings):
     environment: str = "development"
     
     # CORS
-    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://localhost:5030"]
+    allowed_origins: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:3001", 
+        "http://localhost:5030",
+        # Vercel domains will be added here after deployment
+    ]
     
     # Redis
     redis_url: str = "redis://localhost:6379"
