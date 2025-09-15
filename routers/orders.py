@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from routers.auth import verify_token
+from app.routers.auth import verify_token
 from sqlalchemy.orm import Session
-from database import get_db
-from models import Order as OrderModel, OrderItem as OrderItemModel
+from app.database import get_db
+from app.models import Order as OrderModel, OrderItem as OrderItemModel
 
 router = APIRouter()
 
@@ -64,7 +64,7 @@ async def create_order(
     """Create a new order from cart"""
     try:
         # Import cart functions to get real cart data
-        from routers.cart import get_user_cart, carts_db
+        from app.routers.cart import get_user_cart, carts_db
         
         # Get user's real cart data
         cart_data = get_user_cart(current_user_id)
