@@ -3,6 +3,8 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Force rebuild - updated structure
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
