@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
-from app.config import JWT_CONFIG
+from ..config import JWT_CONFIG
 from datetime import datetime, timedelta
 import jwt
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import User
+from ..database import get_db
+from ..models import User
 from passlib.context import CryptContext
 
 router = APIRouter()

@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from app.routers.auth import verify_token
+from ..routers.auth import verify_token
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import Order as OrderModel, OrderItem as OrderItemModel, Product as ProductModel, User as UserModel
+from ..database import get_db
+from ..models import Order as OrderModel, OrderItem as OrderItemModel, Product as ProductModel, User as UserModel
 
 router = APIRouter()
 
@@ -37,8 +37,8 @@ class AdminStats(BaseModel):
     low_stock_products: int
 
 # Import real product data
-from app.routers.products import mock_products
-from app.routers.orders import orders_db
+from ..routers.products import mock_products
+from ..routers.orders import orders_db
 
 # Initialize admin data with real products
 admin_products = mock_products.copy()

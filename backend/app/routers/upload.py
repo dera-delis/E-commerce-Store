@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 import os
 import uuid
 from datetime import datetime
-from app.routers.auth import verify_token
+from ..routers.auth import verify_token
 
 router = APIRouter()
 

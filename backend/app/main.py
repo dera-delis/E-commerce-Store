@@ -5,9 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 import os
-from app.config import settings
-from app.routers import auth, products, cart, orders, admin, upload
-from app.database import init_db
+from .config import settings
+from .routers import auth, products, cart, orders, admin, upload
+from .database import init_db
 
 # Application lifespan
 @asynccontextmanager
