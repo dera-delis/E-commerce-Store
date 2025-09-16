@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Create axios instance
-const baseURL = process.env.REACT_APP_API_URL || 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
+const baseURL = 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
 console.log('API Base URL:', baseURL); // Debug log
 
 const api = axios.create({
