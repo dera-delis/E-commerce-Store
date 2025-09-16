@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import { api, endpoints } from '../api/api';
 
 const Checkout = () => {
@@ -19,7 +18,6 @@ const Checkout = () => {
   });
   
   const { cartItems, getCartTotal, clearCart } = useCart();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const cartTotal = getCartTotal();

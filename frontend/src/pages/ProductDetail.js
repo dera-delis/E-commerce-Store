@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -17,19 +17,7 @@ const ProductDetail = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadProduct();
-  }, [id]);
-
-  // Check if product is favorited on component mount
-  useEffect(() => {
-    if (id) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      setIsFavorited(favorites.includes(id));
-    }
-  }, [id]);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(endpoints.products.detail(id));
@@ -40,7 +28,19 @@ const ProductDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
+
+  // Check if product is favorited on component mount
+  useEffect(() => {
+    if (id) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      setIsFavorited(favorites.includes(id));
+    }
+  }, [id]);
 
   const handleToggleFavorite = () => {
     if (!isAuthenticated) {

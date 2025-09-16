@@ -18,12 +18,6 @@ export const CartProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadCart();
-    }
-  }, [isAuthenticated, loadCart]);
-
   const loadCart = useCallback(async () => {
     if (!isAuthenticated) return;
     
@@ -38,6 +32,12 @@ export const CartProvider = ({ children }) => {
       setLoading(false);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCart();
+    }
+  }, [isAuthenticated, loadCart]);
 
   const addToCart = async (productId, quantity = 1) => {
     try {

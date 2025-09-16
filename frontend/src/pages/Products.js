@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -26,12 +26,7 @@ const Products = () => {
 
   const itemsPerPage = 12;
 
-  useEffect(() => {
-    loadProducts();
-    loadCategories();
-  }, [currentPage, searchQuery, selectedCategory, priceRange, sortBy, sortOrder]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -57,7 +52,12 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchQuery, selectedCategory, priceRange, sortBy, sortOrder, setSearchParams]);
+
+  useEffect(() => {
+    loadProducts();
+    loadCategories();
+  }, [loadProducts]);
 
   const loadCategories = async () => {
     try {
