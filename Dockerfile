@@ -20,7 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend project files
 COPY backend/app/ ./app/
-COPY backend/init.sql .
 COPY backend/uploads/ ./uploads/
 
 # Expose port
