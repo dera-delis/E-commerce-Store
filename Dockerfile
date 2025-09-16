@@ -25,6 +25,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app/ ./app/
 COPY backend/uploads/ ./uploads/
 
+# Copy the main entry point
+COPY main.py .
+
 # Expose port
 EXPOSE 8000
 
