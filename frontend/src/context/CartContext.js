@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-// Fixed circular dependency issue
 import { useAuth } from './AuthContext';
 import { api, endpoints } from '../api/api';
 
