@@ -26,7 +26,9 @@ class Settings(BaseSettings):
         "http://localhost:3000", 
         "http://localhost:3001", 
         "http://localhost:5030",
-        # Vercel domains will be added here after deployment
+        "https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app",
+        "https://e-commerce-store-nine-lovat.vercel.app",
+        "https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app",
     ]
     
     # Redis
