@@ -48,105 +48,69 @@ A modern, full-stack e-commerce application built with **React**, **FastAPI**, a
 
 ### **Frontend Customer Experience**
 
-<details>
-<summary>🏠 Homepage</summary>
+### 🏠 Homepage
 
 ![Homepage](frontend/public/screenshots/homepage.png)
 *Modern landing page with hero section, featured products, and responsive design*
 
-</details>
-
-<details>
-<summary>🛍️ Product Listing</summary>
+### 🛍️ Product Listing
 
 ![Product Listing](frontend/public/screenshots/listing.png)
 *Product grid with search, filtering, and real-time favorites functionality*
 
-</details>
-
-<details>
-<summary>📱 Product Detail</summary>
+### 📱 Product Detail
 
 ![Product Detail](frontend/public/screenshots/product-detail.png)
 *Detailed product view with image gallery, pricing, and add-to-cart functionality*
 
-</details>
-
-<details>
-<summary>🛒 Shopping Cart</summary>
+### 🛒 Shopping Cart
 
 ![Cart Drawer](frontend/public/screenshots/cart-drawer.png)
 *Interactive cart drawer with item management and checkout flow*
 
-</details>
-
-<details>
-<summary>💳 Checkout Process</summary>
+### 💳 Checkout Process
 
 ![Checkout](frontend/public/screenshots/checkout.png)
 *Complete checkout form with order summary and payment processing*
 
-</details>
-
-<details>
-<summary>🔐 User Authentication</summary>
+### 🔐 User Authentication
 
 ![Login](frontend/public/screenshots/login.png)
 *Secure login system with error handling and form validation*
 
-</details>
-
 ### **Admin Panel**
 
-<details>
-<summary>🔑 Admin Login</summary>
+### 🔑 Admin Login
 
 ![Admin Login](admin-frontend/public/screenshots/admin-login.png)
 *Secure admin authentication with role-based access control*
 
-</details>
-
-<details>
-<summary>📊 Admin Dashboard</summary>
+### 📊 Admin Dashboard
 
 ![Admin Dashboard](admin-frontend/public/screenshots/admin-dashboard.png)
 *Comprehensive dashboard with real-time statistics and quick actions*
 
-</details>
-
-<details>
-<summary>📦 Product Management</summary>
+### 📦 Product Management
 
 ![Admin Products](admin-frontend/public/screenshots/admin-products.png)
 *Complete CRUD operations for product management with image upload*
 
-</details>
-
-<details>
-<summary>📋 Order Management</summary>
+### 📋 Order Management
 
 ![Admin Orders](admin-frontend/public/screenshots/admin-orders.png)
 *Order tracking and management with status updates and customer details*
 
-</details>
-
 ### **Backend API**
 
-<details>
-<summary>📚 API Documentation</summary>
+### 📚 API Documentation
 
 ![API Docs](backend/screenshots/api-docs.png)
 *Interactive Swagger UI documentation for all API endpoints*
 
-</details>
-
-<details>
-<summary>🔧 API Version</summary>
+### 🔧 API Version
 
 ![API Version](backend/screenshots/api-version.png)
 *API versioning and endpoint information*
-
-</details>
 
 ## 📊 **Project Statistics**
 
