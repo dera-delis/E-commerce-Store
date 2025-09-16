@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+// Fixed circular dependency issue
 import { useAuth } from './AuthContext';
 import { api, endpoints } from '../api/api';
 
@@ -37,7 +38,7 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       loadCart();
     }
-  }, [isAuthenticated, loadCart]);
+  }, [isAuthenticated]);
 
   const addToCart = async (productId, quantity = 1) => {
     try {
