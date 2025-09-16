@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// Create axios instance - FORCE HTTPS
+// FORCE HTTPS - NO ENVIRONMENT VARIABLES
 const baseURL = 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
-console.log('API Base URL:', baseURL); // Debug log
+console.log('🔒 FORCED HTTPS API Base URL:', baseURL);
 
+// Create axios instance with HTTPS
 const api = axios.create({
   baseURL: baseURL,
   timeout: 10000,
@@ -19,6 +20,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('🚀 Making request to:', config.baseURL + config.url);
     return config;
   },
   (error) => {
@@ -95,6 +97,3 @@ export const endpoints = {
 };
 
 export { api };
-
-
-
