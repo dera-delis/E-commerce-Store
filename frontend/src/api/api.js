@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Create axios instance
+// Create axios instance - FORCE HTTPS
 const baseURL = 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
 console.log('API Base URL:', baseURL); // Debug log
 
