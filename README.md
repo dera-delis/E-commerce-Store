@@ -32,10 +32,18 @@ A modern, full-stack e-commerce application built with **React**, **FastAPI**, a
 ## 🚀 **Live Demo**
 
 ### **🌐 Production URLs**
-- **🛒 Customer Frontend**: [https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app](https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app)
-- **👨‍💼 Admin Panel**: [https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app](https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app)
-- **🔧 API Documentation**: [https://p01--e-commerce-store--tynwtzvvhbfx.code.run/docs](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/docs)
-- **🏥 Health Check**: [https://p01--e-commerce-store--tynwtzvvhbfx.code.run/health](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/health)
+
+<div align="center">
+
+[![🛒 Customer Frontend](https://img.shields.io/badge/🛒_Customer_Frontend-Live_App-brightgreen?style=for-the-badge&logo=react&logoColor=white)](https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app)
+
+[![👨‍💼 Admin Panel](https://img.shields.io/badge/👨‍💼_Admin_Panel-Management_Dashboard-blue?style=for-the-badge&logo=react&logoColor=white)](https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app)
+
+[![🔧 API Documentation](https://img.shields.io/badge/🔧_API_Documentation-Swagger_UI-green?style=for-the-badge&logo=fastapi&logoColor=white)](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/docs)
+
+[![🏥 Health Check](https://img.shields.io/badge/🏥_Health_Check-API_Status-red?style=for-the-badge&logo=health&logoColor=white)](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/health)
+
+</div>
 
 ### **🏠 Local Development**
 - **Frontend**: http://localhost:3000
