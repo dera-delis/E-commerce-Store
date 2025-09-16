@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { api, endpoints } from '../api/api';
 
@@ -22,9 +22,9 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       loadCart();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadCart]);
 
-  const loadCart = async () => {
+  const loadCart = useCallback(async () => {
     if (!isAuthenticated) return;
     
     try {
@@ -37,7 +37,7 @@ export const CartProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   const addToCart = async (productId, quantity = 1) => {
     try {
