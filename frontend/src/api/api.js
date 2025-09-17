@@ -21,6 +21,12 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     console.log('🚀 Making request to:', config.baseURL + config.url);
+    console.log('🔍 Full config:', config);
+    // Force HTTPS
+    if (config.url && config.url.startsWith('http://')) {
+      config.url = config.url.replace('http://', 'https://');
+      console.log('🔄 Fixed HTTP to HTTPS:', config.url);
+    }
     return config;
   },
   (error) => {
