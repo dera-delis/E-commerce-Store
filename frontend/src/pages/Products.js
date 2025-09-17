@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { api, endpoints } from '../api/api';
+import { api, endpoints } from '../api/api-new';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
