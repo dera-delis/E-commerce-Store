@@ -16,15 +16,18 @@ const Home = () => {
   const loadHomeData = async () => {
     try {
       setLoading(true);
+      console.log('🏠 Loading home data...');
+      console.log('📡 Making API requests to:', endpoints.products.featured, 'and', endpoints.products.categories);
       const [productsResponse, categoriesResponse] = await Promise.all([
         api.get(endpoints.products.featured),
         api.get(endpoints.products.categories)
       ]);
       
+      console.log('✅ Home data loaded:', { products: productsResponse.data, categories: categoriesResponse.data });
       setFeaturedProducts(productsResponse.data);
       setCategories(categoriesResponse.data);
     } catch (error) {
-      console.error('Failed to load home data:', error);
+      console.error('❌ Failed to load home data:', error);
     } finally {
       setLoading(false);
     }
