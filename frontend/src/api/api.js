@@ -20,13 +20,18 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Force HTTPS on the full URL
+    const fullUrl = config.baseURL + config.url;
+    if (fullUrl.startsWith('http://')) {
+      const httpsUrl = fullUrl.replace('http://', 'https://');
+      console.log('🔄 FORCING HTTPS:', fullUrl, '->', httpsUrl);
+      config.baseURL = httpsUrl.split('/api')[0];
+      config.url = '/api' + config.url.split('/api')[1];
+    }
+    
     console.log('🚀 Making request to:', config.baseURL + config.url);
     console.log('🔍 Full config:', config);
-    // Force HTTPS
-    if (config.url && config.url.startsWith('http://')) {
-      config.url = config.url.replace('http://', 'https://');
-      console.log('🔄 Fixed HTTP to HTTPS:', config.url);
-    }
     return config;
   },
   (error) => {
