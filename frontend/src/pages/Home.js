@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { api, endpoints } from '../api/api-new';
+import { api, endpoints } from '../api/api';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);

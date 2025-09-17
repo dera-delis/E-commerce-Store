@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// FORCE HTTPS - NO ENVIRONMENT VARIABLES
+// FORCE HTTPS - ABSOLUTE URL
 const baseURL = 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
-console.log('🔒 FORCED HTTPS API Base URL:', baseURL);
+console.log('🔒 REPLACED API - FORCED HTTPS Base URL:', baseURL);
 
 // Create axios instance with HTTPS
 const api = axios.create({
@@ -13,45 +13,7 @@ const api = axios.create({
   },
 });
 
-// Override all HTTP methods to force HTTPS
-const originalGet = api.get;
-const originalPost = api.post;
-const originalPut = api.put;
-const originalDelete = api.delete;
-
-api.get = function(url, config) {
-  if (typeof url === 'string' && url.startsWith('http://')) {
-    url = url.replace('http://', 'https://');
-    console.log('🔄 FORCED HTTPS in GET:', url);
-  }
-  return originalGet.call(this, url, config);
-};
-
-api.post = function(url, data, config) {
-  if (typeof url === 'string' && url.startsWith('http://')) {
-    url = url.replace('http://', 'https://');
-    console.log('🔄 FORCED HTTPS in POST:', url);
-  }
-  return originalPost.call(this, url, data, config);
-};
-
-api.put = function(url, data, config) {
-  if (typeof url === 'string' && url.startsWith('http://')) {
-    url = url.replace('http://', 'https://');
-    console.log('🔄 FORCED HTTPS in PUT:', url);
-  }
-  return originalPut.call(this, url, data, config);
-};
-
-api.delete = function(url, config) {
-  if (typeof url === 'string' && url.startsWith('http://')) {
-    url = url.replace('http://', 'https://');
-    console.log('🔄 FORCED HTTPS in DELETE:', url);
-  }
-  return originalDelete.call(this, url, config);
-};
-
-// Request interceptor to add auth token
+// Request interceptor to add auth token and force HTTPS
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -63,12 +25,12 @@ api.interceptors.request.use(
     const fullUrl = config.baseURL + config.url;
     if (fullUrl.startsWith('http://')) {
       const httpsUrl = fullUrl.replace('http://', 'https://');
-      console.log('🔄 FORCING HTTPS in interceptor:', fullUrl, '->', httpsUrl);
+      console.log('🔄 REPLACED API - FORCING HTTPS:', fullUrl, '->', httpsUrl);
       config.baseURL = httpsUrl.split('/api')[0];
       config.url = '/api' + config.url.split('/api')[1];
     }
     
-    console.log('🚀 Making request to:', config.baseURL + config.url);
+    console.log('🚀 REPLACED API - Making request to:', config.baseURL + config.url);
     return config;
   },
   (error) => {
