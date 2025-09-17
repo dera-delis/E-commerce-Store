@@ -52,6 +52,13 @@ const Products = () => {
       setSearchParams(params);
     } catch (error) {
       console.error('❌ Failed to load products:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        response: error.response,
+        request: error.request,
+        config: error.config
+      });
     } finally {
       setLoading(false);
     }

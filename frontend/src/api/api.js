@@ -13,6 +13,44 @@ const api = axios.create({
   },
 });
 
+// Override all HTTP methods to force HTTPS
+const originalGet = api.get;
+const originalPost = api.post;
+const originalPut = api.put;
+const originalDelete = api.delete;
+
+api.get = function(url, config) {
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+    console.log('🔄 FORCED HTTPS in GET:', url);
+  }
+  return originalGet.call(this, url, config);
+};
+
+api.post = function(url, data, config) {
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+    console.log('🔄 FORCED HTTPS in POST:', url);
+  }
+  return originalPost.call(this, url, data, config);
+};
+
+api.put = function(url, data, config) {
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+    console.log('🔄 FORCED HTTPS in PUT:', url);
+  }
+  return originalPut.call(this, url, data, config);
+};
+
+api.delete = function(url, config) {
+  if (typeof url === 'string' && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+    console.log('🔄 FORCED HTTPS in DELETE:', url);
+  }
+  return originalDelete.call(this, url, config);
+};
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
@@ -25,13 +63,12 @@ api.interceptors.request.use(
     const fullUrl = config.baseURL + config.url;
     if (fullUrl.startsWith('http://')) {
       const httpsUrl = fullUrl.replace('http://', 'https://');
-      console.log('🔄 FORCING HTTPS:', fullUrl, '->', httpsUrl);
+      console.log('🔄 FORCING HTTPS in interceptor:', fullUrl, '->', httpsUrl);
       config.baseURL = httpsUrl.split('/api')[0];
       config.url = '/api' + config.url.split('/api')[1];
     }
     
     console.log('🚀 Making request to:', config.baseURL + config.url);
-    console.log('🔍 Full config:', config);
     return config;
   },
   (error) => {
