@@ -29,6 +29,7 @@ const Products = () => {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🛍️ Loading products...');
       const params = new URLSearchParams({
         page: currentPage,
         limit: itemsPerPage,
@@ -41,14 +42,16 @@ const Products = () => {
       if (priceRange.min) params.append('min_price', priceRange.min);
       if (priceRange.max) params.append('max_price', priceRange.max);
 
+      console.log('📡 Making API request to:', `${endpoints.products.list}?${params}`);
       const response = await api.get(`${endpoints.products.list}?${params}`);
+      console.log('✅ Products response:', response.data);
       setProducts(response.data.products);
       setTotalProducts(response.data.total);
       
       // Update URL params
       setSearchParams(params);
     } catch (error) {
-      console.error('Failed to load products:', error);
+      console.error('❌ Failed to load products:', error);
     } finally {
       setLoading(false);
     }
