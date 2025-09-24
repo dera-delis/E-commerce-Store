@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -142,8 +142,49 @@ mock_categories = [
     {"id": "5", "name": "Books", "description": "Books and educational materials"}
 ]
 
+def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[str]:
+    """Normalize image URLs to avoid mixed content and host mismatches.
+    - Force https for any http URLs not pointing to localhost
+    - Rewrite localhost/0.0.0.0/127.0.0.1 to current request host
+    - Prefix relative '/uploads' with current host and scheme
+    """
+    if not raw_url:
+        return raw_url
+
+    url = raw_url.strip()
+    base = str(request.base_url).rstrip('/')
+
+    # Relative upload path
+    if url.startswith('/uploads'):
+        return f"{base}{url}"
+
+    # Localhost variants -> current host
+    localhost_prefixes = (
+        'http://localhost', 'http://127.0.0.1', 'http://0.0.0.0',
+        'https://localhost', 'https://127.0.0.1', 'https://0.0.0.0',
+    )
+    if url.startswith(localhost_prefixes):
+        # keep path/query, replace origin with current base
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            path_and_query = parsed.path or ''
+            if parsed.query:
+                path_and_query += f"?{parsed.query}"
+            return f"{base}{path_and_query}"
+        except Exception:
+            return base
+
+    # Generic http -> https
+    if url.startswith('http://'):
+        return 'https://' + url[len('http://'):]
+
+    return url
+
+
 @router.get("/", response_model=ProductList)
 async def get_products(
+    request: Request,
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
     category: Optional[str] = Query(None, description="Filter by category"),
@@ -204,7 +245,7 @@ async def get_products(
                 price=db_product.price,
                 currency="USD",
                 category=db_product.category,
-                image_url=db_product.image_url,
+                image_url=_normalize_image_url(db_product.image_url, request),
                 stock=db_product.stock,
                 rating=db_product.rating,
                 review_count=0  # We can add review count later
@@ -233,7 +274,7 @@ async def get_categories():
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/featured", response_model=List[Product])
-async def get_featured_products(db: Session = Depends(get_db)):
+async def get_featured_products(request: Request, db: Session = Depends(get_db)):
     """Get featured products (highly rated or popular)"""
     try:
         # Get top 3 products by rating
@@ -248,7 +289,7 @@ async def get_featured_products(db: Session = Depends(get_db)):
                 price=db_product.price,
                 currency="USD",
                 category=db_product.category,
-                image_url=db_product.image_url,
+                image_url=_normalize_image_url(db_product.image_url, request),
                 stock=db_product.stock,
                 rating=db_product.rating,
                 review_count=0
@@ -261,7 +302,7 @@ async def get_featured_products(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/{product_id}", response_model=Product)
-async def get_product(product_id: str, db: Session = Depends(get_db)):
+async def get_product(product_id: str, request: Request, db: Session = Depends(get_db)):
     """Get product by ID"""
     try:
         # Find product by ID in database
@@ -277,7 +318,7 @@ async def get_product(product_id: str, db: Session = Depends(get_db)):
             price=db_product.price,
             currency="USD",
             category=db_product.category,
-            image_url=db_product.image_url,
+            image_url=_normalize_image_url(db_product.image_url, request),
             stock=db_product.stock,
             rating=db_product.rating,
             review_count=0
