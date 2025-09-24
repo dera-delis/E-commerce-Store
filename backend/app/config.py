@@ -28,10 +28,12 @@ class Settings(BaseSettings):
         "http://localhost:5030",
         "https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app",
         "https://frontend-d30oyh3ze-pedros-projects-da4369b0.vercel.app",
+        "https://frontend-jh5hif20u-pedros-projects-da4369b0.vercel.app",
         "https://e-commerce-store-nine-lovat.vercel.app",
         "https://e-commerce-store-git-main-victor-delis-projects.vercel.app",
         "https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app",
         "https://admin-frontend-h88y7h36k-pedros-projects-da4369b0.vercel.app",
+        "https://admin-frontend-hq4l5psvi-pedros-projects-da4369b0.vercel.app",
     ]
     
     # Redis
