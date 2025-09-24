@@ -1,5 +1,5 @@
-# Updated for Northflank compatibility
-FROM python:3.11-slim
+# Using Python 3.10 which is more stable on Northflank
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
