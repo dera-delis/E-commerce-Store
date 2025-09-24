@@ -60,10 +60,7 @@ services:
     networks:
       - ecommerce-network
     restart: unless-stopped
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm start
+    # Using Nginx-built image; no live bind mounts or npm start
 
   # Admin Frontend
   admin-frontend:
@@ -73,9 +70,7 @@ services:
     container_name: ecommerce-admin-frontend
     ports:
       - "5030:5030"
-    environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
-      - REACT_APP_ENVIRONMENT=${REACT_APP_ENVIRONMENT:-development}
+    # Using Nginx-built image; no runtime env or bind mounts
     depends_on:
       - backend
     networks:

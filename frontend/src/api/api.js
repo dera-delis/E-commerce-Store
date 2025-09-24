@@ -1,8 +1,15 @@
 import axios from 'axios';
 
-// FORCE HTTPS - ABSOLUTE URL
-const baseURL = 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
-console.log('🔒 REPLACED API - FORCED HTTPS Base URL:', baseURL);
+// Dynamic base URL: use localhost in local dev, production URL otherwise
+const isBrowser = typeof window !== 'undefined';
+const isLocal = isBrowser && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+);
+const baseURL = isLocal
+  ? 'http://localhost:8000'
+  : 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
+console.log('🌐 API Base URL:', baseURL);
 
 // Create axios instance with HTTPS
 const api = axios.create({
@@ -13,24 +20,15 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token and force HTTPS
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Force HTTPS on the full URL
-    const fullUrl = config.baseURL + config.url;
-    if (fullUrl.startsWith('http://')) {
-      const httpsUrl = fullUrl.replace('http://', 'https://');
-      console.log('🔄 REPLACED API - FORCING HTTPS:', fullUrl, '->', httpsUrl);
-      config.baseURL = httpsUrl.split('/api')[0];
-      config.url = '/api' + config.url.split('/api')[1];
-    }
-    
-    console.log('🚀 REPLACED API - Making request to:', config.baseURL + config.url);
+
+    console.log('🚀 API Request ->', config.baseURL + config.url);
     return config;
   },
   (error) => {
