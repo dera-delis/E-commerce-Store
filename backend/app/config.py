@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     debug: bool = True
     environment: str = "development"
     
-    # CORS
+    # CORS - Updated for production
     allowed_origins: List[str] = [
         "http://localhost:3000", 
         "http://localhost:3001", 
