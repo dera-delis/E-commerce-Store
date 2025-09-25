@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ProductModal from '../components/ProductModal';
-import { api, endpoints } from '../api/api';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -18,9 +17,26 @@ const AdminProducts = () => {
       setLoading(true);
       setError(null);
       
+      // Get admin token
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('No admin token found');
+      }
+      
       // Fetch products from the admin API
-      const response = await api.get(endpoints.admin.products.list);
-      setProducts(response.data || []);
+      const response = await fetch('http://localhost:8000/api/v1/admin/products', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setProducts(data || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       setError('Failed to load products. Please try again.');
@@ -41,16 +57,29 @@ const AdminProducts = () => {
 
   const handleSaveProduct = async (productData) => {
     try {
-      if (editingProduct) {
-        // Update existing product
-        await api.put(endpoints.admin.products.update(editingProduct.id), productData);
-        alert('Product updated successfully!');
+      const token = localStorage.getItem('admin_token');
+      const url = editingProduct 
+        ? `http://localhost:8000/api/v1/admin/products/${editingProduct.id}`
+        : 'http://localhost:8000/api/v1/admin/products';
+      
+      const method = editingProduct ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(productData)
+      });
+      
+      if (response.ok) {
+        alert(editingProduct ? 'Product updated successfully!' : 'Product created successfully!');
+        fetchProducts(); // Refresh the list
       } else {
-        // Create new product
-        await api.post(endpoints.admin.products.create, productData);
-        alert('Product created successfully!');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to save product');
       }
-      fetchProducts(); // Refresh the list
     } catch (error) {
       console.error('Error saving product:', error);
       throw error;
@@ -61,9 +90,21 @@ const AdminProducts = () => {
   const handleDeleteProduct = async (productId) => {
     if (window.confirm(`Are you sure you want to delete product ${productId}?`)) {
       try {
-        await api.delete(endpoints.admin.products.delete(productId));
-        alert('Product deleted successfully!');
-        fetchProducts(); // Refresh the list
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch(`http://localhost:8000/api/v1/admin/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          alert('Product deleted successfully!');
+          fetchProducts(); // Refresh the list
+        } else {
+          alert('Failed to delete product');
+        }
       } catch (error) {
         console.error('Error deleting product:', error);
         alert('Error deleting product');
@@ -73,20 +114,20 @@ const AdminProducts = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="w-12 h-12 rounded-full border-b-2 border-red-600 animate-spin"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex justify-center items-center h-64">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="mb-4 text-red-600">{error}</p>
           <button 
             onClick={fetchProducts}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md transition-colors cursor-pointer hover:bg-red-700"
           >
             Retry
           </button>
@@ -101,15 +142,15 @@ const AdminProducts = () => {
         <h1 className="text-2xl font-bold text-gray-900">Products Management</h1>
         <button 
           onClick={handleAddProduct}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-colors cursor-pointer hover:bg-blue-700"
         >
           Add New Product
         </button>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="overflow-hidden bg-white shadow sm:rounded-md">
         <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Products List ({products.length} products)</h3>
+          <h3 className="text-lg font-medium leading-6 text-gray-900">Products List ({products.length} products)</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
             Manage your product inventory
           </p>
@@ -118,19 +159,19 @@ const AdminProducts = () => {
           {products.map((product) => (
             <li key={product.id}>
               <div className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 h-16 w-16">
+                    <div className="flex-shrink-0 w-16 h-16">
                       <img 
                         src={product.image_url || 'https://via.placeholder.com/64x64?text=No+Image'} 
                         alt={product.name}
-                        className="h-16 w-16 rounded-lg object-cover"
+                        className="object-cover w-16 h-16 rounded-lg"
                       />
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">{product.name}</div>
                       <div className="text-sm text-gray-500">{product.category}</div>
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="mt-1 text-xs text-gray-400">
                         {product.description?.substring(0, 100)}...
                       </div>
                     </div>
@@ -148,13 +189,13 @@ const AdminProducts = () => {
                     <div className="flex space-x-2">
                       <button 
                         onClick={() => handleEditProduct(product)}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium cursor-pointer"
+                        className="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-900"
                       >
                         Edit
                       </button>
                       <button 
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="text-red-600 hover:text-red-900 text-sm font-medium cursor-pointer"
+                        className="text-sm font-medium text-red-600 cursor-pointer hover:text-red-900"
                       >
                         Delete
                       </button>

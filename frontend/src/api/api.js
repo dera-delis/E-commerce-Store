@@ -8,7 +8,7 @@ const isLocal = isBrowser && (
 );
 const baseURL = isLocal
   ? 'http://localhost:8000'
-  : 'https://p01--e-commerce-store--tvbx6jykt77b.code.run';
+  : 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run';
 console.log('🌐 API Base URL:', baseURL);
 
 // Create axios instance with HTTPS
