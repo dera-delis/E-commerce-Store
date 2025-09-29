@@ -1,10 +1,10 @@
 version: 1.0
-runtime: docker
+runtime: python3
 build:
   commands:
     build:
-      - echo "Building Docker image..."
-      - docker build -t ecommerce-backend .
+      - echo "Installing Python dependencies..."
+      - pip install -r requirements.txt
 run:
   runtime-version: 3.11
   command: uvicorn main:app --host 0.0.0.0 --port 8000
