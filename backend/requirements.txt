@@ -1,2 +1,12 @@
 fastapi
-uvicorn
+mangum
+sqlalchemy
+psycopg2-binary
+PyJWT
+passlib[bcrypt]
+python-multipart
+pydantic
+pydantic-settings
+httpx
+python-dotenv
+redis

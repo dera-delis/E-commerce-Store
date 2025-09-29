@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: E-commerce Store Backend API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        DATABASE_URL: !Ref DatabaseUrl
+        REDIS_URL: !Ref RedisUrl
+        JWT_SECRET_KEY: !Ref JwtSecretKey
+        CORS_ORIGINS: !Ref CorsOrigins
+
+Parameters:
+  DatabaseUrl:
+    Type: String
+    Default: postgresql://postgres:ZEqUvlrEAJOjMw88N65v@ecommerce-postgres.cc7smm262a4g.us-east-1.rds.amazonaws.com:5432/ecommerce
+    Description: PostgreSQL database URL
+  RedisUrl:
+    Type: String
+    Default: redis://ecommerce-redis.rqvfbi.0001.use1.cache.amazonaws.com:6379
+    Description: Redis cache URL
+  JwtSecretKey:
+    Type: String
+    Default: ZEqUvlrEAJOjMw88N65v-12345-abcdef-67890-xyz-98765
+    Description: JWT secret key
+  CorsOrigins:
+    Type: String
+    Default: "*"
+    Description: CORS allowed origins
+
+Resources:
+  EcommerceApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_handler.handler
+      Runtime: python3.11
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+        ApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Export:
+      Name: EcommerceApiUrl
