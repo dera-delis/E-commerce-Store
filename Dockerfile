@@ -1,0 +1,34 @@
+# Root-level Dockerfile for Cloud Run continuous deployment
+# This file builds the backend service
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend project
+COPY backend/ .
+
+# Expose port (Cloud Run uses PORT env var, default is 8080)
+EXPOSE 8080
+
+# Run the application
+# Cloud Run sets PORT=8080 automatically, read from environment
+ENV PORT=8080
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
