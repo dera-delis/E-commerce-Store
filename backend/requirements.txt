@@ -1,4 +1,5 @@
 fastapi
+uvicorn[standard]
 mangum
 sqlalchemy
 psycopg2-binary

@@ -27,6 +27,6 @@ EXPOSE 8000 8080
 
 # Run the application
 # Cloud Run sets PORT env var (typically 8080), uvicorn will use it
-# Use exec to ensure proper signal handling
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}
+# Use sh -c to properly expand environment variable
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
 
