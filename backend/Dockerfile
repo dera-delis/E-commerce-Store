@@ -27,8 +27,11 @@ EXPOSE 8080
 # Set PORT environment variable for uvicorn
 ENV PORT=8080
 
-# Run the application
-# Use shell form to properly expand $PORT environment variable
-# Cloud Run sets PORT env var (typically 8080), uvicorn will use it
-CMD sh -c "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"
+# Copy startup script
+COPY start_server.py /app/start_server.py
+RUN chmod +x /app/start_server.py
+
+# Run the application using Python startup script
+# This ensures PORT environment variable is properly read
+CMD ["python", "start_server.py"]
 
