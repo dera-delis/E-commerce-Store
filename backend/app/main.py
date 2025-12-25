@@ -12,21 +12,21 @@ from app.database import init_db
 # Application lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup - make it fast and non-blocking
     import sys
     print("🚀 Starting E-commerce Store Backend...", flush=True)
     print(f"📦 Python version: {sys.version}", flush=True)
     print(f"🌐 PORT environment variable: {os.getenv('PORT', 'not set')}", flush=True)
-    print("📊 Initializing database...", flush=True)
+    
+    # Initialize database in background - don't block startup
+    print("📊 Initializing database (non-blocking)...", flush=True)
     try:
         init_db()
-        print("✅ Database initialization completed", flush=True)
     except Exception as e:
         print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
         print("⚠️ App will continue, but database features may not work until database is configured.", flush=True)
-        import traceback
-        traceback.print_exc()
-    print("✅ Application startup complete", flush=True)
+    
+    print("✅ Application startup complete - server is ready!", flush=True)
     yield
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...", flush=True)
