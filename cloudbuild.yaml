@@ -41,9 +41,22 @@ steps:
       - "8080"
       - --timeout
       - "300"
+    # Grant Cloud Run Admin permission to this step
+    id: deploy-backend
 
 images:
   - gcr.io/$PROJECT_ID/ecommerce-backend:latest
+
+# Grant Cloud Run Admin role to Cloud Build service account
+# Run this command once to grant permissions:
+# gcloud projects add-iam-policy-binding PROJECT_ID \
+#   --member="serviceAccount:PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+#   --role="roles/run.admin"
+#
+# Also grant Service Account User role:
+# gcloud projects add-iam-policy-binding PROJECT_ID \
+#   --member="serviceAccount:PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+#   --role="roles/iam.serviceAccountUser"
 
 # Note: Environment variables should be set in Cloud Run console or via:
 # gcloud run services update ecommerce-backend --update-env-vars KEY=VALUE
