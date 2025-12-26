@@ -24,11 +24,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend project
 COPY backend/ .
 
+# Copy startup script (ensure it's in the right location)
+COPY backend/start.py /app/start.py
+
 # Expose port (Cloud Run uses PORT env var, default is 8080)
 EXPOSE 8080
 
 # Run the application
 # Cloud Run sets PORT=8080 automatically, read from environment
 ENV PORT=8080
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
+# Run the application using Python startup script
+# This ensures PORT environment variable is properly read
+# Use unbuffered output for better logging
+CMD ["python", "-u", "start.py"]
 
