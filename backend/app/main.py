@@ -14,17 +14,24 @@ from app.database import init_db
 async def lifespan(app: FastAPI):
     # Startup - make it fast and non-blocking
     import sys
+    import asyncio
     print("🚀 Starting E-commerce Store Backend...", flush=True)
     print(f"📦 Python version: {sys.version}", flush=True)
     print(f"🌐 PORT environment variable: {os.getenv('PORT', 'not set')}", flush=True)
     
-    # Initialize database in background - don't block startup
-    print("📊 Initializing database (non-blocking)...", flush=True)
-    try:
-        init_db()
-    except Exception as e:
-        print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
-        print("⚠️ App will continue, but database features may not work until database is configured.", flush=True)
+    # Initialize database in background thread - don't block startup
+    def init_db_background():
+        try:
+            print("📊 Initializing database in background...", flush=True)
+            init_db()
+        except Exception as e:
+            print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
+            print("⚠️ App will continue, but database features may not work until database is configured.", flush=True)
+    
+    # Start database initialization in background - don't wait for it
+    import threading
+    db_thread = threading.Thread(target=init_db_background, daemon=True)
+    db_thread.start()
     
     print("✅ Application startup complete - server is ready!", flush=True)
     yield
