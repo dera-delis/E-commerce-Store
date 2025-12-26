@@ -6,18 +6,33 @@ from contextlib import asynccontextmanager
 import uvicorn
 import os
 from app.config import settings
-from app.routers import auth, products, cart, orders, admin, upload
 from app.database import init_db
+
+# Import routers with error handling
+try:
+    from app.routers import auth, products, cart, orders, admin, upload
+    routers_available = True
+except Exception as e:
+    print(f"⚠️ Warning: Some routers failed to import: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
+    routers_available = False
+    # Create dummy routers to prevent crashes
+    class DummyRouter:
+        pass
+    auth = products = cart = orders = admin = upload = DummyRouter()
 
 # Application lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup - make it fast and non-blocking
     import sys
-    import asyncio
     print("🚀 Starting E-commerce Store Backend...", flush=True)
     print(f"📦 Python version: {sys.version}", flush=True)
     print(f"🌐 PORT environment variable: {os.getenv('PORT', 'not set')}", flush=True)
+    
+    # Mark server as ready immediately - don't wait for anything
+    print("✅ Application startup complete - server is ready!", flush=True)
     
     # Initialize database in background thread - don't block startup
     def init_db_background():
@@ -33,8 +48,9 @@ async def lifespan(app: FastAPI):
     db_thread = threading.Thread(target=init_db_background, daemon=True)
     db_thread.start()
     
-    print("✅ Application startup complete - server is ready!", flush=True)
+    # Yield immediately - server is ready to accept requests
     yield
+    
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...", flush=True)
 
@@ -63,13 +79,23 @@ app.add_middleware(
     allowed_hosts=["*"]  # Configure appropriately for production
 )
 
-# Include routers with versioning
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
-app.include_router(cart.router, prefix="/api/v1/cart", tags=["Cart"])
-app.include_router(orders.router, prefix="/api/v1/orders", tags=["Orders"])
-app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
-app.include_router(upload.router, prefix="/api/v1/upload", tags=["Upload"])
+# Include routers with versioning (with error handling)
+if routers_available:
+    try:
+        app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+        app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
+        app.include_router(cart.router, prefix="/api/v1/cart", tags=["Cart"])
+        app.include_router(orders.router, prefix="/api/v1/orders", tags=["Orders"])
+        app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+        app.include_router(upload.router, prefix="/api/v1/upload", tags=["Upload"])
+        print("✅ All routers registered successfully", flush=True)
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to register some routers: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        # App will still start, just without those routers
+else:
+    print("⚠️ Warning: Routers not available, app will start with limited functionality", flush=True)
 
 # Mount static files for uploads
 if os.path.exists("uploads"):

@@ -9,16 +9,20 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@postgre
 # Create engine with connection pool settings for Cloud Run
 # Use echo=False to avoid logging all SQL queries
 # Set pool_pre_ping to verify connections before using
+# IMPORTANT: Don't connect immediately - use pool_pre_ping to verify on first use
 try:
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,  # Verify connections before using
         pool_recycle=300,    # Recycle connections after 5 minutes
-        connect_args={"connect_timeout": 10},  # 10 second connection timeout
-        echo=False  # Don't echo SQL queries
+        connect_args={"connect_timeout": 5},  # 5 second connection timeout (reduced from 10)
+        echo=False,  # Don't echo SQL queries
+        pool_size=5,  # Limit pool size
+        max_overflow=10  # Limit overflow connections
     )
+    print("✅ Database engine created (connection will be tested on first use)", flush=True)
 except Exception as e:
-    print(f"⚠️ Warning: Could not create database engine: {e}")
+    print(f"⚠️ Warning: Could not create database engine: {e}", flush=True)
     engine = None
 
 # Create session factory (only if engine exists)

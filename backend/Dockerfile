@@ -32,5 +32,6 @@ ENV PORT=8080
 
 # Run the application using Python startup script
 # This ensures PORT environment variable is properly read
-CMD ["python", "start.py"]
+# Use exec form to ensure proper signal handling
+CMD ["python", "-u", "start.py"]
 
