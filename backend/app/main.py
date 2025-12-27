@@ -27,20 +27,43 @@ except Exception as e:
     init_db = None
 
 # Import routers individually with error handling - so one failure doesn't break all
+# CRITICAL: Ensure dependencies are available first
 routers = {}
 router_names = ['auth', 'products', 'cart', 'orders', 'admin', 'upload']
 
+# Ensure critical dependencies exist before importing routers
+try:
+    from app.database import get_db
+    print("✅ Database dependency available", flush=True)
+except Exception as e:
+    print(f"⚠️ Warning: Database dependency not available: {e}", flush=True)
+
+try:
+    from app.config import JWT_CONFIG
+    print("✅ JWT config available", flush=True)
+except Exception as e:
+    print(f"⚠️ Warning: JWT config not available: {e}", flush=True)
+
+try:
+    from app.models import User, Product, Order
+    print("✅ Models available", flush=True)
+except Exception as e:
+    print(f"⚠️ Warning: Models not available: {e}", flush=True)
+
+# Now import routers
 for router_name in router_names:
     try:
+        print(f"🔍 Attempting to import router '{router_name}'...", flush=True)
         router_module = __import__(f'app.routers.{router_name}', fromlist=[router_name])
-        routers[router_name] = getattr(router_module, 'router', None)
-        if routers[router_name]:
-            print(f"✅ Router '{router_name}' imported successfully", flush=True)
+        router_obj = getattr(router_module, 'router', None)
+        if router_obj:
+            routers[router_name] = router_obj
+            print(f"✅ Router '{router_name}' imported and registered successfully", flush=True)
         else:
             print(f"⚠️ Warning: Router '{router_name}' module found but no 'router' attribute", flush=True)
             routers[router_name] = None
     except Exception as e:
-        print(f"⚠️ Warning: Router '{router_name}' failed to import: {e}", flush=True)
+        print(f"❌ ERROR: Router '{router_name}' failed to import: {e}", flush=True)
         import traceback
         traceback.print_exc()
         routers[router_name] = None
