@@ -19,16 +19,10 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Install gettext for envsubst
-RUN apk add --no-cache gettext
-
 # Copy built app from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy nginx configuration template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
-
-# Copy startup script
+# Copy startup script (generates nginx config at runtime)
 COPY start-nginx.sh /start-nginx.sh
 RUN chmod +x /start-nginx.sh
 
