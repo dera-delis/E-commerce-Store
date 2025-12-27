@@ -8,9 +8,10 @@ const isLocal = isBrowser && (
 );
 
 // Use REACT_APP_API_URL from environment, or fallback to localhost for dev
+// Production: Cloud Run backend URL
 const baseURL = isLocal
   ? 'http://localhost:8000'
-  : (process.env.REACT_APP_API_URL || 'https://p01--e-commerce-store--tynwtzvvhbfx.code.run');
+  : (process.env.REACT_APP_API_URL || 'https://ecommerce-backend-192614808954.us-central1.run.app');
 console.log('🌐 API Base URL:', baseURL);
 
 // Create axios instance with HTTPS

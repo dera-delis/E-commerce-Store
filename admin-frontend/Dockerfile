@@ -7,13 +7,13 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (use npm install since lockfile may be absent)
-RUN npm install --omit=dev
+# Install ALL dependencies (including dev dependencies needed for build)
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (this needs dev dependencies like react-scripts)
 RUN npm run build
 
 # Production stage
