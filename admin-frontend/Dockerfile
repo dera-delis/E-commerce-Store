@@ -19,15 +19,21 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
 # Copy built app from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy nginx configuration template (nginx:alpine auto-processes .template files)
-# It will substitute ${PORT} with the PORT environment variable
+# Copy nginx configuration template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Copy startup script
+COPY start-nginx.sh /start-nginx.sh
+RUN chmod +x /start-nginx.sh
 
 # Expose port (Cloud Run will set PORT env var, default to 5030)
 EXPOSE 5030
 
-# nginx:alpine automatically processes templates and starts nginx
-# No custom CMD needed - default nginx entrypoint handles it
+# Use startup script that handles PORT env var
+CMD ["/start-nginx.sh"]
