@@ -22,8 +22,9 @@ fi
 echo "✅ Template file found" >&2
 
 # Replace PORT placeholder in nginx config template
+# Use explicit 0.0.0.0 binding for Cloud Run compatibility
 echo "🔄 Processing template with envsubst..." >&2
-envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '${PORT}' < /etc/nginx/templates/default.conf.template | sed "s/listen ${PORT};/listen 0.0.0.0:${PORT};/" > /etc/nginx/conf.d/default.conf
 
 # Verify config was created
 if [ ! -f /etc/nginx/conf.d/default.conf ]; then
