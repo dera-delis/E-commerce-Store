@@ -10,15 +10,41 @@
 
 **Before creating the trigger, you MUST grant permissions to the Cloud Build service account.**
 
-👉 **See `SETUP_SERVICE_ACCOUNT.md` for detailed instructions**
+### Step 0: Grant Service Account Permissions
 
-**Quick version:**
-1. Go to: https://console.cloud.google.com/iam-admin/iam?project=ecommerce-store-482103
-2. Find: `PROJECT_NUMBER@cloudbuild.gserviceaccount.com` (replace PROJECT_NUMBER with your actual number)
-3. Grant these roles:
-   - `Cloud Run Admin`
-   - `Service Account User`
-   - `Storage Admin`
+#### Option A: Using Cloud Console (No CLI needed)
+
+1. **Go to IAM & Admin:**
+   https://console.cloud.google.com/iam-admin/iam?project=ecommerce-store-482103
+
+2. **Find your Project Number:**
+   - Look at the top of the page or go to: https://console.cloud.google.com/home/dashboard?project=ecommerce-store-482103
+   - Your Project Number is shown (e.g., `192614808954`)
+
+3. **Find the Cloud Build Service Account:**
+   - In the IAM page, look for: `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`
+   - Example: `192614808954@cloudbuild.gserviceaccount.com`
+   - If you don't see it, click "Grant Access" and search for it
+
+4. **Grant Required Roles:**
+   Click the edit icon (pencil) next to the service account, then add these roles:
+   - ✅ **Cloud Run Admin** (`roles/run.admin`) - Allows deploying to Cloud Run
+   - ✅ **Service Account User** (`roles/iam.serviceAccountUser`) - Allows using service accounts
+   - ✅ **Storage Admin** (`roles/storage.admin`) - Allows pushing Docker images
+   - ✅ **Cloud Build Service Account** (`roles/cloudbuild.builds.builder`) - Allows building
+
+5. **Save** the changes
+
+#### Option B: Using PowerShell Script (If you have gcloud CLI)
+
+If you have `gcloud` CLI installed, you can run:
+```powershell
+.\fix-cloud-build-permissions.ps1
+```
+
+This script will automatically grant all required permissions.
+
+---
 
 ## Step-by-Step Setup
 
@@ -28,11 +54,11 @@
 ### 2. Create New Trigger
 - Click **"Create Trigger"** button (top of page)
 
-### 3. Configure Trigger
+### 3. Configure Trigger (Customer Frontend)
 
 **Name:**
 ```
-deploy-frontends
+deploy-customer-frontend
 ```
 
 **Event:**
@@ -45,7 +71,12 @@ deploy-frontends
 
 **Configuration:**
 - Select **"Cloud Build configuration file (yaml or json)"**
-- Location: `cloudbuild-frontend.yaml`
+- Location: `cloudbuild-customer-frontend.yaml` (for customer frontend)
+- OR `cloudbuild-admin-frontend.yaml` (for admin frontend)
+
+**Note:** You'll need to create TWO separate triggers:
+1. One for customer frontend using `cloudbuild-customer-frontend.yaml`
+2. One for admin frontend using `cloudbuild-admin-frontend.yaml`
 
 **Advanced (optional):**
 - You can leave defaults
@@ -54,24 +85,35 @@ deploy-frontends
 - Click **"Create"**
 - The trigger is now set up!
 
-### 5. Test It
+### 5. Create Second Trigger (Admin Frontend)
+
+Repeat steps 2-4, but with:
+- **Name:** `deploy-admin-frontend`
+- **Configuration Location:** `cloudbuild-admin-frontend.yaml`
+
+### 6. Test It
 You can test immediately:
-- Click on your new trigger
+- Click on each trigger
 - Click **"Run"** button
 - Select branch: `main`
 - Click **"Run"**
 
-Or just push a commit to `main` and it will auto-deploy!
+Or just push a commit to `main` and both will auto-deploy!
 
 ## What Happens Next?
 
 Every time you push to `main`:
-1. ✅ Cloud Build detects the push
-2. ✅ Builds customer frontend Docker image
-3. ✅ Deploys customer frontend to Cloud Run
-4. ✅ Builds admin frontend Docker image  
-5. ✅ Deploys admin frontend to Cloud Run
-6. ✅ Both frontends are live!
+1. ✅ **Customer Frontend Trigger:**
+   - Builds customer frontend Docker image
+   - Deploys to `ecommerce-frontend` service
+   - Gets its own URL: `https://ecommerce-frontend-XXXXX.us-central1.run.app`
+
+2. ✅ **Admin Frontend Trigger:**
+   - Builds admin frontend Docker image
+   - Deploys to `ecommerce-admin-frontend` service
+   - Gets its own URL: `https://ecommerce-admin-frontend-XXXXX.us-central1.run.app`
+
+3. ✅ Both frontends are live with separate URLs!
 
 ## View Build Status
 
