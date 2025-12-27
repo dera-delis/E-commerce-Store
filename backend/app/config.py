@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 import os
 
 class Settings(BaseSettings):
@@ -25,27 +25,28 @@ class Settings(BaseSettings):
     
     # CORS - reads from CORS_ORIGINS (comma-separated string)
     # Default origins for local development and existing deployments
-    _default_origins = [
-        "http://localhost:3000", 
-        "http://localhost:3001", 
-        "http://localhost:5030",
-        "https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app",
-        "https://e-commerce-store-nine-lovat.vercel.app",
-        "https://e-commerce-store-git-main-victor-delis-projects.vercel.app",
-        "https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app",
-    ]
+    allowed_origins: List[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000", 
+            "http://localhost:3001", 
+            "http://localhost:5030",
+            "https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app",
+            "https://e-commerce-store-nine-lovat.vercel.app",
+            "https://e-commerce-store-git-main-victor-delis-projects.vercel.app",
+            "https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app",
+        ]
+    )
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Parse CORS_ORIGINS from environment variable
+    @model_validator(mode='after')
+    def parse_cors_origins(self):
+        """Parse CORS_ORIGINS from environment variable and merge with defaults"""
         cors_env = os.getenv("CORS_ORIGINS", "")
         if cors_env:
             # Parse comma-separated string
             origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
             # Merge with defaults to avoid breaking existing deployments
-            self.allowed_origins = list(set(self._default_origins + origins))
-        else:
-            self.allowed_origins = self._default_origins
+            self.allowed_origins = list(set(self.allowed_origins + origins))
+        return self
     
     # Redis - reads from REDIS_URL environment variable
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -56,24 +57,6 @@ class Settings(BaseSettings):
 
 # Create settings instance
 settings = Settings()
-
-# Ensure allowed_origins is initialized (in case __init__ wasn't called properly)
-if not hasattr(settings, 'allowed_origins') or not settings.allowed_origins:
-    cors_env = os.getenv("CORS_ORIGINS", "")
-    default_origins = [
-        "http://localhost:3000", 
-        "http://localhost:3001", 
-        "http://localhost:5030",
-        "https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app",
-        "https://e-commerce-store-nine-lovat.vercel.app",
-        "https://e-commerce-store-git-main-victor-delis-projects.vercel.app",
-        "https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app",
-    ]
-    if cors_env:
-        origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
-        settings.allowed_origins = list(set(default_origins + origins))
-    else:
-        settings.allowed_origins = default_origins
 
 # Database configuration
 DATABASE_CONFIG = {
