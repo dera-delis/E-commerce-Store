@@ -109,15 +109,21 @@ app = FastAPI(
 
 # Add CORS middleware - with error handling
 try:
+    cors_origins = getattr(settings, 'allowed_origins', ["*"])
+    print(f"🌐 CORS allowed origins: {cors_origins}", flush=True)
+    print(f"🌐 CORS_ORIGINS env var: {os.getenv('CORS_ORIGINS', 'not set')}", flush=True)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=getattr(settings, 'allowed_origins', ["*"]),
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    print(f"✅ CORS middleware configured with {len(cors_origins)} allowed origins", flush=True)
 except Exception as e:
     print(f"⚠️ Warning: CORS middleware setup failed: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
 
 # Add trusted host middleware
 app.add_middleware(
