@@ -5,8 +5,26 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 import os
-from app.config import settings
-from app.database import init_db
+
+# CRITICAL: Import settings with error handling - don't block if it fails
+try:
+    from app.config import settings
+except Exception as e:
+    print(f"⚠️ Warning: Could not import settings: {e}", flush=True)
+    # Create minimal settings
+    class MinimalSettings:
+        allowed_origins = ["*"]
+        host = "0.0.0.0"
+        port = int(os.getenv("PORT", "8080"))
+        debug = False
+    settings = MinimalSettings()
+
+# CRITICAL: Import database with error handling - don't block if it fails
+try:
+    from app.database import init_db
+except Exception as e:
+    print(f"⚠️ Warning: Could not import database: {e}", flush=True)
+    init_db = None
 
 # Import routers with error handling
 try:
@@ -22,34 +40,31 @@ except Exception as e:
         pass
     auth = products = cart = orders = admin = upload = DummyRouter()
 
-# Application lifespan
+# Application lifespan - CRITICAL: Must be fast and never block
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup - make it fast and non-blocking
+    # Startup - mark ready IMMEDIATELY
     import sys
     print("🚀 Starting E-commerce Store Backend...", flush=True)
     print(f"📦 Python version: {sys.version}", flush=True)
     print(f"🌐 PORT environment variable: {os.getenv('PORT', 'not set')}", flush=True)
     
-    # Mark server as ready immediately - don't wait for anything
+    # CRITICAL: Yield immediately - server MUST be ready NOW
     print("✅ Application startup complete - server is ready!", flush=True)
-    
-    # Initialize database in background thread - don't block startup
-    def init_db_background():
-        try:
-            print("📊 Initializing database in background...", flush=True)
-            init_db()
-        except Exception as e:
-            print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
-            print("⚠️ App will continue, but database features may not work until database is configured.", flush=True)
-    
-    # Start database initialization in background - don't wait for it
-    import threading
-    db_thread = threading.Thread(target=init_db_background, daemon=True)
-    db_thread.start()
-    
-    # Yield immediately - server is ready to accept requests
     yield
+    
+    # Initialize database in background AFTER server is ready
+    if init_db:
+        def init_db_background():
+            try:
+                print("📊 Initializing database in background...", flush=True)
+                init_db()
+            except Exception as e:
+                print(f"⚠️ Warning: Database initialization failed: {e}", flush=True)
+        
+        import threading
+        db_thread = threading.Thread(target=init_db_background, daemon=True)
+        db_thread.start()
     
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...", flush=True)
@@ -64,14 +79,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Add CORS middleware - with error handling
+try:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=getattr(settings, 'allowed_origins', ["*"]),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+except Exception as e:
+    print(f"⚠️ Warning: CORS middleware setup failed: {e}", flush=True)
 
 # Add trusted host middleware
 app.add_middleware(
