@@ -19,23 +19,35 @@ CLOUD_BUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 
 echo "🔐 Granting permissions to: $CLOUD_BUILD_SA"
 
+# Grant Cloud Build Service Account role (CRITICAL - allows Cloud Build to create builds)
+echo "1. Granting Cloud Build Service Account role..."
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${CLOUD_BUILD_SA}" \
+  --role="roles/cloudbuild.builds.builder"
+
 # Grant Cloud Run Admin role
-echo "1. Granting Cloud Run Admin role..."
+echo "2. Granting Cloud Run Admin role..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/run.admin"
 
 # Grant Service Account User role (needed to deploy)
-echo "2. Granting Service Account User role..."
+echo "3. Granting Service Account User role..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/iam.serviceAccountUser"
 
 # Grant Cloud Run Invoker role (if needed)
-echo "3. Granting Cloud Run Invoker role..."
+echo "4. Granting Cloud Run Invoker role..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/run.invoker"
+
+# Grant Storage Admin (needed to push images to Container Registry)
+echo "5. Granting Storage Admin role..."
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${CLOUD_BUILD_SA}" \
+  --role="roles/storage.admin"
 
 echo "✅ Permissions granted!"
 echo ""
