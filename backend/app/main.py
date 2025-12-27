@@ -26,19 +26,24 @@ except Exception as e:
     print(f"⚠️ Warning: Could not import database: {e}", flush=True)
     init_db = None
 
-# Import routers with error handling
-try:
-    from app.routers import auth, products, cart, orders, admin, upload
-    routers_available = True
-except Exception as e:
-    print(f"⚠️ Warning: Some routers failed to import: {e}", flush=True)
-    import traceback
-    traceback.print_exc()
-    routers_available = False
-    # Create dummy routers to prevent crashes
-    class DummyRouter:
-        pass
-    auth = products = cart = orders = admin = upload = DummyRouter()
+# Import routers individually with error handling - so one failure doesn't break all
+routers = {}
+router_names = ['auth', 'products', 'cart', 'orders', 'admin', 'upload']
+
+for router_name in router_names:
+    try:
+        router_module = __import__(f'app.routers.{router_name}', fromlist=[router_name])
+        routers[router_name] = getattr(router_module, 'router', None)
+        if routers[router_name]:
+            print(f"✅ Router '{router_name}' imported successfully", flush=True)
+        else:
+            print(f"⚠️ Warning: Router '{router_name}' module found but no 'router' attribute", flush=True)
+            routers[router_name] = None
+    except Exception as e:
+        print(f"⚠️ Warning: Router '{router_name}' failed to import: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        routers[router_name] = None
 
 # Application lifespan - CRITICAL: Must be fast and never block
 @asynccontextmanager
@@ -97,23 +102,31 @@ app.add_middleware(
     allowed_hosts=["*"]  # Configure appropriately for production
 )
 
-# Include routers with versioning (with error handling)
-if routers_available:
-    try:
-        app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-        app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
-        app.include_router(cart.router, prefix="/api/v1/cart", tags=["Cart"])
-        app.include_router(orders.router, prefix="/api/v1/orders", tags=["Orders"])
-        app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
-        app.include_router(upload.router, prefix="/api/v1/upload", tags=["Upload"])
-        print("✅ All routers registered successfully", flush=True)
-    except Exception as e:
-        print(f"⚠️ Warning: Failed to register some routers: {e}", flush=True)
-        import traceback
-        traceback.print_exc()
-        # App will still start, just without those routers
-else:
-    print("⚠️ Warning: Routers not available, app will start with limited functionality", flush=True)
+# Include routers individually - register each one separately so failures don't break others
+router_configs = [
+    ("auth", "/api/v1/auth", "Authentication"),
+    ("products", "/api/v1/products", "Products"),
+    ("cart", "/api/v1/cart", "Cart"),
+    ("orders", "/api/v1/orders", "Orders"),
+    ("admin", "/api/v1/admin", "Admin"),
+    ("upload", "/api/v1/upload", "Upload"),
+]
+
+registered_count = 0
+for router_name, prefix, tag in router_configs:
+    if routers.get(router_name):
+        try:
+            app.include_router(routers[router_name], prefix=prefix, tags=[tag])
+            print(f"✅ Router '{router_name}' registered at {prefix}", flush=True)
+            registered_count += 1
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to register router '{router_name}': {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+    else:
+        print(f"⚠️ Warning: Router '{router_name}' not available, skipping", flush=True)
+
+print(f"✅ Registered {registered_count}/{len(router_configs)} routers successfully", flush=True)
 
 # Mount static files for uploads
 if os.path.exists("uploads"):
