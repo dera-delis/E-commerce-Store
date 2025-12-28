@@ -182,8 +182,7 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     return url
 
 
-@router.get("", response_model=ProductList)  # No trailing slash
-@router.get("/", response_model=ProductList)  # With trailing slash
+@router.get("/", response_model=ProductList)
 async def get_products(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
@@ -266,13 +265,36 @@ async def get_products(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/categories", response_model=List[Category])
-async def get_categories():
-    """Get all product categories"""
+async def get_categories(db: Session = Depends(get_db)):
+    """Get all product categories from database"""
     try:
-        return [Category(**c) for c in mock_categories]
+        # Get unique categories from database
+        categories = db.query(ProductModel.category).distinct().all()
+        
+        # Convert to Category objects
+        category_list = []
+        for idx, (category_name,) in enumerate(categories, start=1):
+            if category_name:  # Only add non-empty categories
+                category_list.append(Category(
+                    id=str(idx),
+                    name=category_name,
+                    description=f"Products in {category_name} category"
+                ))
+        
+        # If no categories in database, return mock categories as fallback
+        if not category_list:
+            category_list = [Category(**c) for c in mock_categories]
+        
+        return category_list
     except Exception as e:
-        print(f"Error in categories: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        print(f"Error in categories: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        # Fallback to mock categories on error
+        try:
+            return [Category(**c) for c in mock_categories]
+        except Exception as fallback_error:
+            raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.get("/featured", response_model=List[Product])
 async def get_featured_products(request: Request, db: Session = Depends(get_db)):

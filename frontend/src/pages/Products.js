@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
@@ -31,8 +31,8 @@ const Products = () => {
       setLoading(true);
       console.log('🛍️ Loading products...');
       const params = new URLSearchParams({
-        page: currentPage,
-        limit: itemsPerPage,
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
         sort_by: sortBy,
         sort_order: sortOrder
       });
@@ -45,11 +45,24 @@ const Products = () => {
       console.log('📡 Making API request to:', `${endpoints.products.list}?${params}`);
       const response = await api.get(`${endpoints.products.list}?${params}`);
       console.log('✅ Products response:', response.data);
-      setProducts(response.data.products);
-      setTotalProducts(response.data.total);
+      setProducts(response.data.products || []);
+      setTotalProducts(response.data.total || 0);
       
-      // Update URL params
-      setSearchParams(params);
+      // Update URL params only if they're different to avoid infinite loops
+      const currentParams = new URLSearchParams(searchParams);
+      const paramsChanged = 
+        currentParams.get('page') !== params.get('page') ||
+        currentParams.get('search') !== params.get('search') ||
+        currentParams.get('category') !== params.get('category') ||
+        currentParams.get('min_price') !== params.get('min_price') ||
+        currentParams.get('max_price') !== params.get('max_price') ||
+        currentParams.get('sort_by') !== params.get('sort_by') ||
+        currentParams.get('sort_order') !== params.get('sort_order');
+      
+      if (paramsChanged) {
+        isInternalUpdate.current = true;
+        setSearchParams(params, { replace: true });
+      }
     } catch (error) {
       console.error('❌ Failed to load products:', error);
       console.error('❌ Error details:', {
@@ -62,10 +75,19 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchQuery, selectedCategory, priceRange, sortBy, sortOrder, setSearchParams]);
+  }, [currentPage, searchQuery, selectedCategory, priceRange, sortBy, sortOrder, searchParams, setSearchParams]);
 
   // Sync state with URL params when they change (e.g., from header search)
+  // Use a ref to track if we're updating from internal state change
+  const isInternalUpdate = useRef(false);
+  
   useEffect(() => {
+    // Skip if this is an internal update (to prevent loops)
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
+
     const urlSearch = searchParams.get('search') || '';
     const urlCategory = searchParams.get('category') || '';
     const urlMinPrice = searchParams.get('min_price') || '';
@@ -85,17 +107,25 @@ const Products = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); // React to URL param changes
 
+  // Load products when filters change
   useEffect(() => {
     loadProducts();
-    loadCategories();
   }, [loadProducts]);
+
+  // Load categories only once on mount
+  useEffect(() => {
+    loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadCategories = async () => {
     try {
-      const response = await api.get(endpoints.products.categories);
-      setCategories(response.data);
+      const response = await api.get(endpoints.products.categories, { timeout: 5000 });
+      setCategories(response.data || []);
     } catch (error) {
       console.error('Failed to load categories:', error);
+      // Set empty array on error to prevent UI issues
+      setCategories([]);
     }
   };
 
