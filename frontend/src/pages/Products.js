@@ -80,8 +80,9 @@ const Products = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Reset to page 1 when searching - loadProducts will run automatically
+    // because searchQuery is in the dependency array
     setCurrentPage(1);
-    setSearchQuery(''); // Clear search after searching
   };
 
   const clearSearch = () => {
