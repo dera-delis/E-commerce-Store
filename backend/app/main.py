@@ -186,7 +186,7 @@ async def health_check():
     }
 
 # Database initialization endpoint
-@app.post("/api/v1/init-db")
+@app.get("/api/v1/init-db")
 async def initialize_database():
     """Manually trigger database table creation and initialization"""
     try:
