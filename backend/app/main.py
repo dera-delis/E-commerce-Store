@@ -119,10 +119,13 @@ try:
         cors_origins = ["*"]
         print(f"⚠️ No CORS origins configured, allowing all origins", flush=True)
     
+    # When allowing all origins, credentials must be False
+    allow_all = cors_origins == ["*"] or (isinstance(cors_origins, list) and "*" in cors_origins)
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
-        allow_credentials=True,
+        allow_origins=["*"] if allow_all else cors_origins,
+        allow_credentials=False if allow_all else True,  # Can't use credentials with wildcard
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["*"],
@@ -137,7 +140,7 @@ except Exception as e:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False,  # Can't use credentials with wildcard
         allow_methods=["*"],
         allow_headers=["*"],
     )
