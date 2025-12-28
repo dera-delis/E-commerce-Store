@@ -12,3 +12,4 @@ pydantic-settings
 httpx
 python-dotenv
 redis
+google-cloud-storage
