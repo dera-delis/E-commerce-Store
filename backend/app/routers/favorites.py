@@ -4,8 +4,8 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.routers.auth import verify_token
-from app.database import get_db
-from app.models import Favorite, Product
+from app.database import get_db, engine
+from app.models import Favorite, Product, Base
 
 router = APIRouter()
 
@@ -36,6 +36,9 @@ async def get_favorites(
 ):
     """Get user's favorite products"""
     try:
+        # Ensure favorites table exists
+        Base.metadata.create_all(bind=engine)
+        
         # Get all favorite product IDs for the user
         favorites = db.query(Favorite).filter(
             Favorite.user_id == current_user_id
@@ -70,6 +73,9 @@ async def get_favorites(
         
         return result
     except Exception as e:
+        import traceback
+        error_detail = f"Failed to get favorites: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in get_favorites: {error_detail}", flush=True)
         raise HTTPException(status_code=500, detail=f"Failed to get favorites: {str(e)}")
 
 @router.post("/{product_id}")
@@ -80,6 +86,9 @@ async def add_favorite(
 ):
     """Add a product to favorites"""
     try:
+        # Ensure favorites table exists
+        Base.metadata.create_all(bind=engine)
+        
         # Check if product exists
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
@@ -110,6 +119,9 @@ async def add_favorite(
         raise
     except Exception as e:
         db.rollback()
+        import traceback
+        error_detail = f"Failed to add favorite: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in add_favorite: {error_detail}", flush=True)
         raise HTTPException(status_code=500, detail=f"Failed to add favorite: {str(e)}")
 
 @router.delete("/{product_id}")
@@ -120,6 +132,9 @@ async def remove_favorite(
 ):
     """Remove a product from favorites"""
     try:
+        # Ensure favorites table exists
+        Base.metadata.create_all(bind=engine)
+        
         favorite = db.query(Favorite).filter(
             and_(
                 Favorite.user_id == current_user_id,
@@ -138,6 +153,9 @@ async def remove_favorite(
         raise
     except Exception as e:
         db.rollback()
+        import traceback
+        error_detail = f"Failed to remove favorite: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in remove_favorite: {error_detail}", flush=True)
         raise HTTPException(status_code=500, detail=f"Failed to remove favorite: {str(e)}")
 
 @router.get("/check/{product_id}")
@@ -148,6 +166,9 @@ async def check_favorite(
 ):
     """Check if a product is favorited by the user"""
     try:
+        # Ensure favorites table exists
+        Base.metadata.create_all(bind=engine)
+        
         favorite = db.query(Favorite).filter(
             and_(
                 Favorite.user_id == current_user_id,
@@ -157,5 +178,8 @@ async def check_favorite(
         
         return {"is_favorited": favorite is not None}
     except Exception as e:
+        import traceback
+        error_detail = f"Failed to check favorite: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in check_favorite: {error_detail}", flush=True)
         raise HTTPException(status_code=500, detail=f"Failed to check favorite: {str(e)}")
 
