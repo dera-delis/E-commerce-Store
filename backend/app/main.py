@@ -108,22 +108,39 @@ app = FastAPI(
 )
 
 # Add CORS middleware - with error handling
+# TEMPORARILY ALLOW ALL ORIGINS to fix CORS issue
 try:
     cors_origins = getattr(settings, 'allowed_origins', ["*"])
     print(f"🌐 CORS allowed origins: {cors_origins}", flush=True)
     print(f"🌐 CORS_ORIGINS env var: {os.getenv('CORS_ORIGINS', 'not set')}", flush=True)
+    
+    # If no origins specified or empty list, allow all (for debugging)
+    if not cors_origins or cors_origins == []:
+        cors_origins = ["*"]
+        print(f"⚠️ No CORS origins configured, allowing all origins", flush=True)
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins,
+        allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["*"],
     )
-    print(f"✅ CORS middleware configured with {len(cors_origins)} allowed origins", flush=True)
+    print(f"✅ CORS middleware configured with {len(cors_origins) if cors_origins != ['*'] else 'ALL'} allowed origins", flush=True)
 except Exception as e:
     print(f"⚠️ Warning: CORS middleware setup failed: {e}", flush=True)
     import traceback
     traceback.print_exc()
+    # Fallback: allow all origins if CORS setup fails
+    print(f"🔄 Fallback: Allowing all origins due to CORS setup failure", flush=True)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Add trusted host middleware
 app.add_middleware(
