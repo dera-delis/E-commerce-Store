@@ -131,11 +131,20 @@ def init_db():
                 
                 for user_data in sample_users:
                     try:
-                        # Ensure password is a string and encode it properly
+                        # Ensure password is a string
                         password_str = str(user_data["password"])
                         # Truncate to 72 bytes if needed (bcrypt limit)
-                        if len(password_str.encode('utf-8')) > 72:
-                            password_str = password_str[:72]
+                        # Convert to bytes, truncate, then back to string
+                        password_bytes = password_str.encode('utf-8')
+                        if len(password_bytes) > 72:
+                            password_bytes = password_bytes[:72]
+                            password_str = password_bytes.decode('utf-8', errors='ignore')
+                        
+                        # Hash the password - ensure it's not longer than 72 bytes
+                        # Double-check byte length before hashing
+                        password_bytes_check = password_str.encode('utf-8')
+                        if len(password_bytes_check) > 72:
+                            password_str = password_bytes_check[:72].decode('utf-8', errors='ignore')
                         
                         # Hash the password
                         password_hash = pwd_context.hash(password_str)
@@ -148,9 +157,19 @@ def init_db():
                             role=user_data["role"]
                         )
                         db.add(user)
-                        print(f"✅ Added user: {user_data['email']}", flush=True)
+                        print(f"✅ User '{user_data['email']}' added.", flush=True)
+                    except ValueError as ve:
+                        # Handle bcrypt password length error specifically
+                        if "password cannot be longer than 72 bytes" in str(ve):
+                            print(f"⚠️ Password for {user_data['email']} too long, skipping...", flush=True)
+                        else:
+                            print(f"❌ Error adding user '{user_data['email']}': {ve}", flush=True)
+                            import traceback
+                            traceback.print_exc()
+                        # Continue with next user
+                        continue
                     except Exception as e:
-                        print(f"❌ Error adding user {user_data['email']}: {e}", flush=True)
+                        print(f"❌ Error adding user '{user_data['email']}': {e}", flush=True)
                         import traceback
                         traceback.print_exc()
                         # Continue with next user
