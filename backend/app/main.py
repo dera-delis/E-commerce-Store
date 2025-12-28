@@ -170,6 +170,16 @@ async def health_check():
         "version": "1.0.0"
     }
 
+# CORS test endpoint
+@app.get("/api/v1/cors-test")
+async def cors_test():
+    """Test endpoint to verify CORS is working"""
+    return {
+        "status": "ok",
+        "message": "CORS is configured correctly",
+        "allowed_origins": getattr(settings, 'allowed_origins', [])
+    }
+
 # API version endpoint
 @app.get("/api/version")
 async def api_version():
