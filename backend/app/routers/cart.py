@@ -29,6 +29,9 @@ class AddToCartRequest(BaseModel):
     product_id: str
     quantity: int = 1
 
+class UpdateCartItemRequest(BaseModel):
+    quantity: int
+
 # Mock cart storage
 carts_db = {}
 
@@ -114,12 +117,15 @@ async def remove_cart_item(product_id: str, current_user_id: str = Depends(verif
     return {"message": "Item removed"}
 
 @router.put("/items/{product_id}")
-async def update_cart_item(product_id: str, request: AddToCartRequest, current_user_id: str = Depends(verify_token)):
+async def update_cart_item(product_id: str, request: UpdateCartItemRequest, current_user_id: str = Depends(verify_token)):
     """Update cart item quantity"""
     cart = get_user_cart(current_user_id)
-    if product_id in cart["items"]:
-        cart["items"][product_id]["quantity"] = request.quantity
-        cart["items"][product_id]["subtotal"] = cart["items"][product_id]["price"] * request.quantity
+    if product_id not in cart["items"]:
+        raise HTTPException(status_code=404, detail="Item not found in cart")
+    
+    cart["items"][product_id]["quantity"] = request.quantity
+    cart["items"][product_id]["subtotal"] = cart["items"][product_id]["price"] * request.quantity
+    
     cart = get_user_cart(current_user_id)
     return CartResponse(
         items=list(cart["items"].values()),
