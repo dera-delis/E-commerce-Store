@@ -34,10 +34,27 @@ else:
 def get_db():
     """Dependency to get database session"""
     if engine is None:
-        raise Exception("Database not configured. Please set DATABASE_URL environment variable.")
-    db = SessionLocal()
+        error_msg = "Database not configured. Please set DATABASE_URL environment variable."
+        print(f"❌ {error_msg}", flush=True)
+        raise Exception(error_msg)
+    
+    try:
+        db = SessionLocal()
+        # Test the connection
+        db.execute("SELECT 1")
+    except Exception as e:
+        error_msg = f"Database connection failed: {str(e)}"
+        print(f"❌ {error_msg}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise Exception(error_msg)
+    
     try:
         yield db
+    except Exception as e:
+        print(f"❌ Database session error: {str(e)}", flush=True)
+        db.rollback()
+        raise
     finally:
         db.close()
 

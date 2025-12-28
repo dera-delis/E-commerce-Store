@@ -121,32 +121,46 @@ async def signup(user_data: UserSignup, db: Session = Depends(get_db)):
 @router.post("/login", response_model=UserResponse)
 async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """User login endpoint"""
-    # Check if user exists
-    user = db.query(User).filter(User.email == user_data.email).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Check password
-    if not pwd_context.verify(user_data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": user.id})
-    
-    # Split name into first and last name
-    name_parts = user.name.split(" ", 1)
-    first_name = name_parts[0] if name_parts else ""
-    last_name = name_parts[1] if len(name_parts) > 1 else ""
-    
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        first_name=first_name,
-        last_name=last_name,
-        role=user.role,
-        access_token=access_token,
-        token_type="bearer"
-    )
+    try:
+        # Check if user exists
+        user = db.query(User).filter(User.email == user_data.email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Check password
+        if not pwd_context.verify(user_data.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user.id})
+        
+        # Split name into first and last name
+        name_parts = user.name.split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            first_name=first_name,
+            last_name=last_name,
+            role=user.role,
+            access_token=access_token,
+            token_type="bearer"
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 401)
+        raise
+    except Exception as e:
+        # Log the actual error for debugging
+        import traceback
+        error_msg = f"Login error: {str(e)}"
+        print(f"❌ {error_msg}", flush=True)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Internal server error during login: {str(e)}"
+        )
 
 @router.post("/logout")
 async def logout():
