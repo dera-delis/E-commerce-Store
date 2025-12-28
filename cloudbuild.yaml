@@ -49,6 +49,10 @@ steps:
 images:
   - gcr.io/$PROJECT_ID/ecommerce-backend:latest
 
+# Options for logging configuration
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 # Grant Cloud Run Admin role to Cloud Build service account
 # Run this command once to grant permissions:
 # gcloud projects add-iam-policy-binding PROJECT_ID \
