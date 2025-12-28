@@ -41,6 +41,8 @@ steps:
       - "8080"
       - --timeout
       - "300"
+      - --set-env-vars
+      - CORS_ORIGINS=${_CORS_ORIGINS}
     # Grant Cloud Run Admin permission to this step
     id: deploy-backend
 
