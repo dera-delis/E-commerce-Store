@@ -6,8 +6,8 @@
 [![Docker](https://img.shields.io/badge/Docker-24.0-blue?logo=docker&logoColor=white)](https://docker.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-blue?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/badge/Status-Live%20Production-brightgreen)](https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app)
-[![Deployment](https://img.shields.io/badge/Deployment-Vercel%20%2B%20Northflank-blue)](https://vercel.com)
+[![Status](https://img.shields.io/badge/Status-Live%20Production-brightgreen)](https://ecommerce-frontend-192614808954.us-central1.run.app)
+[![Deployment](https://img.shields.io/badge/Deployment-Google%20Cloud%20Run-blue)](https://cloud.google.com/run)
 
 A modern, full-stack e-commerce application built with **React**, **FastAPI**, and **PostgreSQL**, featuring a complete admin panel and real-time data synchronization.
 
@@ -35,13 +35,13 @@ A modern, full-stack e-commerce application built with **React**, **FastAPI**, a
 
 <div align="center">
 
-[![🛒 Customer Frontend](https://img.shields.io/badge/🛒_Customer_Frontend-Live_App-brightgreen?style=for-the-badge&logo=react&logoColor=white)](https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app)
+[![🛒 Customer Frontend](https://img.shields.io/badge/🛒_Customer_Frontend-Live_App-brightgreen?style=for-the-badge&logo=react&logoColor=white)](https://ecommerce-frontend-192614808954.us-central1.run.app)
 
-[![👨‍💼 Admin Panel](https://img.shields.io/badge/👨‍💼_Admin_Panel-Management_Dashboard-blue?style=for-the-badge&logo=react&logoColor=white)](https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app)
+[![👨‍💼 Admin Panel](https://img.shields.io/badge/👨‍💼_Admin_Panel-Management_Dashboard-blue?style=for-the-badge&logo=react&logoColor=white)](https://ecommerce-admin-frontend-192614808954.us-central1.run.app)
 
-[![🔧 API Documentation](https://img.shields.io/badge/🔧_API_Documentation-Swagger_UI-green?style=for-the-badge&logo=fastapi&logoColor=white)](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/docs)
+[![🔧 API Documentation](https://img.shields.io/badge/🔧_API_Documentation-Swagger_UI-green?style=for-the-badge&logo=fastapi&logoColor=white)](https://ecommerce-backend-192614808954.us-central1.run.app/docs)
 
-[![🏥 Health Check](https://img.shields.io/badge/🏥_Health_Check-API_Status-red?style=for-the-badge&logo=health&logoColor=white)](https://p01--e-commerce-store--tynwtzvvhbfx.code.run/health)
+[![🏥 Health Check](https://img.shields.io/badge/🏥_Health_Check-API_Status-red?style=for-the-badge&logo=health&logoColor=white)](https://ecommerce-backend-192614808954.us-central1.run.app/health)
 
 </div>
 
@@ -130,8 +130,9 @@ A modern, full-stack e-commerce application built with **React**, **FastAPI**, a
 | **Database Tables** | 5 |
 | **Docker Containers** | 4 |
 | **Deployment Status** | ✅ Live Production |
-| **Frontend Deployments** | 2 (Customer + Admin) |
-| **Backend Services** | 1 (API + Database + Cache) |
+| **Frontend Deployments** | 2 (Customer + Admin on Cloud Run) |
+| **Backend Services** | 1 (API on Cloud Run + Cloud SQL) |
+| **Storage** | Google Cloud Storage for images |
 | **Build Time** | < 2 minutes |
 | **Response Time** | < 200ms |
 | **Uptime** | 99.9%+ |
@@ -184,10 +185,14 @@ graph TB
 - **JWT** - Authentication tokens
 - **Pydantic** - Data validation
 
-### **DevOps**
+### **DevOps & Infrastructure**
 - **Docker** - Containerization
 - **Docker Compose** - Multi-container orchestration
 - **Nginx** - Web server and reverse proxy
+- **Google Cloud Run** - Serverless container platform
+- **Google Cloud Storage** - Persistent image storage
+- **Cloud SQL (PostgreSQL)** - Managed database service
+- **Cloud Build** - CI/CD pipeline
 
 ## ✨ **Key Features**
 
@@ -222,11 +227,13 @@ graph TB
 ### **Technical Features**
 - 🚀 **API Versioning** - `/api/v1/` endpoint structure
 - 🔒 **JWT Authentication** - Secure token-based auth
-- 💾 **Data Persistence** - PostgreSQL with proper relationships
-- 🖼️ **Image Upload** - Direct file upload to server
+- 💾 **Data Persistence** - Cloud SQL (PostgreSQL) with proper relationships
+- 🖼️ **Image Upload** - Google Cloud Storage for persistent file storage
 - 🔄 **CORS Support** - Cross-origin resource sharing
 - 📝 **API Documentation** - Auto-generated Swagger UI
-- 🐳 **Dockerized** - Easy deployment and scaling
+- 🐳 **Dockerized** - Containerized with Docker
+- ☁️ **Cloud Native** - Deployed on Google Cloud Run
+- 🔄 **CI/CD** - Automated deployments with Cloud Build
 
 ## 🚀 **Quick Start**
 
@@ -352,7 +359,13 @@ CREATE TABLE order_items (
 - `PUT /api/v1/admin/orders/{id}` - Update order
 
 ### **File Upload**
-- `POST /api/v1/upload/image` - Upload product images
+- `POST /api/v1/upload/image` - Upload product images to Google Cloud Storage
+
+### **Favorites**
+- `GET /api/v1/favorites` - Get user's favorite products
+- `POST /api/v1/favorites/{product_id}` - Add product to favorites
+- `DELETE /api/v1/favorites/{product_id}` - Remove product from favorites
+- `GET /api/v1/favorites/check/{product_id}` - Check if product is favorited
 
 ## 🔒 **Security Features**
 
@@ -428,50 +441,55 @@ curl http://localhost:8000/api/v1/products
 ### **✅ Production Deployment Status**
 
 **🌐 Live Application:**
-- **Backend API**: Deployed on [Northflank](https://northflank.com) with PostgreSQL + Redis
-- **Customer Frontend**: Deployed on [Vercel](https://vercel.com) with automatic CI/CD
-- **Admin Frontend**: Deployed on [Vercel](https://vercel.com) with automatic CI/CD
+- **Backend API**: Deployed on [Google Cloud Run](https://cloud.google.com/run) with Cloud SQL (PostgreSQL)
+- **Customer Frontend**: Deployed on [Google Cloud Run](https://cloud.google.com/run) with automatic CI/CD
+- **Admin Frontend**: Deployed on [Google Cloud Run](https://cloud.google.com/run) with automatic CI/CD
 
 **🔧 Infrastructure:**
-- **Database**: PostgreSQL 15 with connection pooling
-- **Cache**: Redis for session management and caching
-- **CDN**: Vercel's global CDN for frontend assets
+- **Database**: Cloud SQL (PostgreSQL 15) with connection pooling
+- **Storage**: Google Cloud Storage for persistent image uploads
+- **CI/CD**: Cloud Build with automated deployments
 - **SSL**: Automatic HTTPS certificates
-- **Monitoring**: Real-time health checks and logging
+- **Monitoring**: Cloud Logging and real-time health checks
+- **Scaling**: Auto-scaling from 0 to 10 instances based on traffic
 
 ### **🏗️ Deployment Architecture**
 
 ```mermaid
 graph TB
-    subgraph "Production Infrastructure"
-        A[Customer Frontend<br/>Vercel CDN]
-        B[Admin Frontend<br/>Vercel CDN]
-        C[Backend API<br/>Northflank]
-        D[PostgreSQL<br/>Northflank]
-        E[Redis Cache<br/>Northflank]
+    subgraph "Google Cloud Platform"
+        A[Customer Frontend<br/>Cloud Run]
+        B[Admin Frontend<br/>Cloud Run]
+        C[Backend API<br/>Cloud Run]
+        D[Cloud SQL<br/>PostgreSQL]
+        E[Cloud Storage<br/>Image Uploads]
+        F[Cloud Build<br/>CI/CD]
     end
     
     A --> C
     B --> C
     C --> D
     C --> E
+    F --> A
+    F --> B
+    F --> C
 ```
 
 ### **🔧 Environment Variables (Production)**
 
-**Backend (Northflank):**
+**Backend (Cloud Run):**
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/database
-REDIS_URL=redis://host:6379
+DATABASE_URL=postgresql://user:password@/ecommerce?host=/cloudsql/instance
 JWT_SECRET_KEY=production-secret-key
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-CORS_ORIGINS=https://frontend-6gdz6uhy6-pedros-projects-da4369b0.vercel.app,https://admin-frontend-76n4q4bcz-pedros-projects-da4369b0.vercel.app
+GCS_BUCKET_NAME=ecommerce-store-uploads
+CORS_ORIGINS=https://ecommerce-frontend-192614808954.us-central1.run.app,https://ecommerce-admin-frontend-192614808954.us-central1.run.app
 ```
 
-**Frontend (Vercel):**
+**Frontend (Cloud Run):**
 ```env
-REACT_APP_API_URL=https://p01--e-commerce-store--tynwtzvvhbfx.code.run
+REACT_APP_API_URL=https://ecommerce-backend-192614808954.us-central1.run.app
 ```
 
 ### **🚀 Local Development Setup**

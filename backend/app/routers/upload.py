@@ -47,13 +47,30 @@ def upload_to_gcs(file_content: bytes, filename: str) -> str:
         # Upload file
         blob.upload_from_string(file_content, content_type=content_type)
         
-        # Make blob publicly readable
-        blob.make_public()
+        # Try to make blob publicly readable
+        # This will work even if bucket has public access prevention enabled
+        # (individual blobs can be made public even when bucket-level prevention is on)
+        try:
+            blob.make_public()
+            print(f"✅ Blob made public: {blob.public_url}", flush=True)
+            return blob.public_url
+        except Exception as public_error:
+            # If making public fails (e.g., org policy), generate a signed URL instead
+            print(f"⚠️ Could not make blob public (may be restricted by org policy): {public_error}", flush=True)
+            print(f"ℹ️ Using signed URL instead (valid for 1 year)", flush=True)
+            
+            # Generate signed URL that's valid for 1 year
+            from datetime import timedelta
+            url = blob.generate_signed_url(
+                expiration=timedelta(days=365),
+                method='GET'
+            )
+            return url
         
-        # Return public URL
-        return blob.public_url
     except Exception as e:
         print(f"❌ GCS upload failed: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to upload to cloud storage: {str(e)}")
 
 @router.post("/image")
@@ -88,22 +105,32 @@ async def upload_image(
         
         # Upload to GCS if configured, otherwise use local filesystem
         if USE_GCS:
+            print(f"📤 Uploading to GCS bucket: {GCS_BUCKET_NAME}", flush=True)
             try:
                 file_url = upload_to_gcs(file_content, unique_filename)
-                print(f"✅ Image uploaded to GCS: {file_url}", flush=True)
+                print(f"✅ Image uploaded to GCS successfully!", flush=True)
+                print(f"   URL: {file_url}", flush=True)
+                print(f"   Bucket: {GCS_BUCKET_NAME}", flush=True)
+                print(f"   Filename: {unique_filename}", flush=True)
             except Exception as gcs_error:
-                print(f"⚠️ GCS upload failed, falling back to local: {gcs_error}", flush=True)
+                print(f"❌ GCS upload failed: {gcs_error}", flush=True)
+                import traceback
+                traceback.print_exc()
+                print(f"⚠️ Falling back to local filesystem storage", flush=True)
                 # Fallback to local storage
                 file_path = os.path.join(UPLOAD_DIR, unique_filename)
                 with open(file_path, "wb") as buffer:
                     buffer.write(file_content)
                 file_url = f"/uploads/{unique_filename}"
+                print(f"⚠️ Using local storage: {file_url}", flush=True)
         else:
             # Local filesystem storage (for development)
+            print(f"ℹ️ GCS not configured (GCS_BUCKET_NAME not set), using local storage", flush=True)
             file_path = os.path.join(UPLOAD_DIR, unique_filename)
             with open(file_path, "wb") as buffer:
                 buffer.write(file_content)
             file_url = f"/uploads/{unique_filename}"
+            print(f"📁 Saved locally: {file_url}", flush=True)
         
         return JSONResponse(content={
             "message": "Image uploaded successfully",
