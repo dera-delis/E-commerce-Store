@@ -116,7 +116,7 @@ async def create_product(
 async def get_admin_products(
     current_user_id: str = Depends(verify_token),
     page: int = 1,
-    limit: int = 20,
+    limit: int = 1000,  # Increased default limit to 1000 to show all products
     db: Session = Depends(get_db)
 ):
     """Get all products for admin management"""
@@ -125,8 +125,12 @@ async def get_admin_products(
     
     try:
         # Get products from database
-        offset = (page - 1) * limit
-        db_products = db.query(ProductModel).offset(offset).limit(limit).all()
+        # If limit is very high (>= 1000), fetch all products without pagination
+        if limit >= 1000:
+            db_products = db.query(ProductModel).order_by(ProductModel.created_at.desc()).all()
+        else:
+            offset = (page - 1) * limit
+            db_products = db.query(ProductModel).order_by(ProductModel.created_at.desc()).offset(offset).limit(limit).all()
         
         # Convert to admin format
         products = []

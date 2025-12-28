@@ -18,8 +18,13 @@ const AdminProducts = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch products from the admin API using the configured api instance
-      const response = await api.get(endpoints.admin.products.list);
+      // Fetch all products by setting a high limit (1000 should be enough for most stores)
+      const response = await api.get(endpoints.admin.products.list, {
+        params: {
+          page: 1,
+          limit: 1000  // Fetch up to 1000 products
+        }
+      });
       setProducts(response.data || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
