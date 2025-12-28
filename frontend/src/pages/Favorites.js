@@ -8,6 +8,7 @@ import { api, endpoints } from '../api/api';
 const Favorites = () => {
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [failedImages, setFailedImages] = useState(new Set());
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [isAdding, setIsAdding] = useState({});
@@ -148,15 +149,20 @@ const Favorites = () => {
               {/* Product Image */}
               <div className="relative overflow-hidden bg-gray-100">
                 <Link to={`/products/${product.id}`}>
-                  <img
-                    src={product.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
-                    alt={product.name}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.target.onerror = null; // Prevent infinite loop
-                      e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
-                    }}
-                  />
+                  {product.image_url && !failedImages.has(product.id) ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={() => setFailedImages(prev => new Set(prev).add(product.id))}
+                    />
+                  ) : (
+                    <div className="w-full h-48 flex items-center justify-center bg-gray-200">
+                      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  )}
                 </Link>
                 
                 {/* Remove from Favorites Button */}
