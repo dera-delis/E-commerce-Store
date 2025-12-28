@@ -110,9 +110,13 @@ const ProductCard = ({ product }) => {
       <div className="relative overflow-hidden bg-gray-100">
         <Link to={`/products/${product.id}`}>
           <img
-            src={product.image_url}
+            src={product.image_url || 'https://via.placeholder.com/400x300?text=No+Image'}
             alt={product.name}
-            className="w-full h-48 object-contain transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              e.target.onerror = null; // Prevent infinite loop
+              e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+            }}
           />
         </Link>
         

@@ -164,9 +164,13 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100">
               <img
-                src={product.image_url}
+                src={product.image_url || 'https://via.placeholder.com/600x600?text=No+Image'}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = 'https://via.placeholder.com/600x600?text=No+Image';
+                }}
               />
             </div>
           </div>

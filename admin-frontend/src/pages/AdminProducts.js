@@ -126,11 +126,15 @@ const AdminProducts = () => {
               <div className="px-4 py-4 sm:px-6">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 w-16 h-16">
+                    <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                       <img 
                         src={product.image_url || 'https://via.placeholder.com/64x64?text=No+Image'} 
                         alt={product.name}
-                        className="object-cover w-16 h-16 rounded-lg"
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.onerror = null; // Prevent infinite loop
+                          e.target.src = 'https://via.placeholder.com/64x64?text=No+Image';
+                        }}
                       />
                     </div>
                     <div className="ml-4">
