@@ -17,13 +17,14 @@ const Header = () => {
   const [searchParams] = useSearchParams();
 
   // Sync search bar with URL parameters when on products page
+  // But only if the search bar is empty (don't override user typing)
   useEffect(() => {
-    if (location.pathname === '/products') {
+    if (location.pathname === '/products' && !searchQuery) {
       const urlSearchQuery = searchParams.get('search') || '';
-      setSearchQuery(urlSearchQuery);
-    } else {
-      // Keep the search query even when not on products page
-      // This allows users to search from any page
+      // Only sync if search bar is empty to avoid interfering with user typing
+      if (urlSearchQuery && !searchQuery) {
+        // Don't set it - let user see empty search bar after searching
+      }
     }
   }, [location.pathname, searchParams]);
 
@@ -34,10 +35,12 @@ const Header = () => {
       // Navigate to products page with search query
       // Works from any page - always goes to /products with search
       navigate(`/products?page=1&limit=12&sort_by=name&sort_order=asc&search=${encodeURIComponent(trimmedQuery)}`);
-      // Don't clear search - keep it visible so user knows what they searched for
+      // Clear search bar after searching
+      setSearchQuery('');
     } else {
       // If search is empty, navigate to products page without search
       navigate('/products?page=1&limit=12&sort_by=name&sort_order=asc');
+      setSearchQuery('');
     }
   };
 

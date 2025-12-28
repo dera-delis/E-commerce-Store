@@ -64,6 +64,27 @@ const Products = () => {
     }
   }, [currentPage, searchQuery, selectedCategory, priceRange, sortBy, sortOrder, setSearchParams]);
 
+  // Sync state with URL params when they change (e.g., from header search)
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    const urlCategory = searchParams.get('category') || '';
+    const urlMinPrice = searchParams.get('min_price') || '';
+    const urlMaxPrice = searchParams.get('max_price') || '';
+    const urlSortBy = searchParams.get('sort_by') || 'name';
+    const urlSortOrder = searchParams.get('sort_order') || 'asc';
+    const urlPage = parseInt(searchParams.get('page') || '1');
+
+    // Update state if URL params changed (only update if different to avoid infinite loops)
+    if (urlSearch !== searchQuery) setSearchQuery(urlSearch);
+    if (urlCategory !== selectedCategory) setSelectedCategory(urlCategory);
+    if (urlMinPrice !== priceRange.min) setPriceRange(prev => ({ ...prev, min: urlMinPrice }));
+    if (urlMaxPrice !== priceRange.max) setPriceRange(prev => ({ ...prev, max: urlMaxPrice }));
+    if (urlSortBy !== sortBy) setSortBy(urlSortBy);
+    if (urlSortOrder !== sortOrder) setSortOrder(urlSortOrder);
+    if (urlPage !== currentPage) setCurrentPage(urlPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // React to URL param changes
+
   useEffect(() => {
     loadProducts();
     loadCategories();
