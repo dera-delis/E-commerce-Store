@@ -62,7 +62,7 @@ export const endpoints = {
     orders: {
       list: '/api/v1/admin/orders',
       detail: (id) => `/api/v1/admin/orders/${id}`,
-      updateStatus: (id) => `/api/v1/admin/orders/${id}/status`,
+      updateStatus: (id) => `/api/v1/admin/orders/${id}`, // Use the main update endpoint
     },
   },
 };

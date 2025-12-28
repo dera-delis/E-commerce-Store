@@ -270,10 +270,14 @@ async def get_admin_orders(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class OrderUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
 @router.put("/orders/{order_id}")
 async def update_order(
     order_id: str,
-    order_update: dict,
+    order_update: OrderUpdate,
     current_user_id: str = Depends(verify_token),
     db: Session = Depends(get_db)
 ):
@@ -288,11 +292,12 @@ async def update_order(
             raise HTTPException(status_code=404, detail="Order not found")
         
         # Update order fields
-        if "status" in order_update:
-            order.status = order_update["status"]
-        if "notes" in order_update:
+        update_data = order_update.dict(exclude_unset=True)
+        if "status" in update_data:
+            order.status = update_data["status"]
+        if "notes" in update_data:
             # Store notes in shipping_address field for now (could add notes field to model later)
-            order.shipping_address = order_update["notes"]
+            order.shipping_address = update_data["notes"]
         
         order.updated_at = datetime.now()
         
@@ -300,9 +305,14 @@ async def update_order(
         db.refresh(order)
         
         return {"message": "Order updated successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = f"Failed to update order: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ Error in update_order: {error_detail}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update order: {str(e)}")
 
 @router.get("/orders/{order_id}")
 async def get_admin_order(
