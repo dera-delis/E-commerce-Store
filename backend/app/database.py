@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.models import Base
 import os
@@ -41,7 +41,7 @@ def get_db():
     try:
         db = SessionLocal()
         # Test the connection
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
     except Exception as e:
         error_msg = f"Database connection failed: {str(e)}"
         print(f"❌ {error_msg}", flush=True)
