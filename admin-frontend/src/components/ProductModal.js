@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../api/api';
 
 const ProductModal = ({ isOpen, onClose, onSave, product = null, isEdit = false }) => {
   const [formData, setFormData] = useState({
@@ -85,28 +86,23 @@ const ProductModal = ({ isOpen, onClose, onSave, product = null, isEdit = false 
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch('http://localhost:8000/api/v1/upload/image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      // Use the configured api instance for upload
+      // Don't set Content-Type header - axios will set it automatically with boundary for FormData
+      const response = await api.post('/api/v1/upload/image', formData);
 
-      if (response.ok) {
-        const result = await response.json();
-        setFormData(prev => ({
-          ...prev,
-          image_url: `http://localhost:8000${result.file_url}`
-        }));
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Upload failed');
-      }
+      // Use the full URL from the response, or construct it from the baseURL
+      const imageUrl = response.data.file_url.startsWith('http') 
+        ? response.data.file_url 
+        : `${api.defaults.baseURL}${response.data.file_url}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        image_url: imageUrl
+      }));
     } catch (error) {
       console.error('Image upload failed:', error);
-      setError(`Image upload failed: ${error.message}`);
+      const errorMessage = error.response?.data?.detail || error.message || 'Upload failed';
+      setError(`Image upload failed: ${errorMessage}`);
       setImageFile(null);
       setImagePreview('');
     } finally {

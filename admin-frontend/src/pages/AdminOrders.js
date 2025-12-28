@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import OrderModal from '../components/OrderModal';
+import { api, endpoints } from '../api/api';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -26,27 +27,9 @@ const AdminOrders = () => {
     try {
       setLoading(true);
       
-      // Get auth token from localStorage
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        console.error('No admin token found');
-        return;
-      }
-      
-      // Fetch orders from the backend API
-      const response = await fetch('http://localhost:8000/api/v1/admin/orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const ordersData = await response.json();
-      setOrders(ordersData);
+      // Fetch orders from the backend API using the configured api instance
+      const response = await api.get(endpoints.admin.orders.list);
+      setOrders(response.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       // Fallback to mock data if API fails
@@ -76,26 +59,13 @@ const AdminOrders = () => {
 
   const handleUpdateOrder = async (orderId, updateData) => {
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(`http://localhost:8000/api/v1/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      if (response.ok) {
-        alert('Order updated successfully!');
-        fetchOrders(); // Refresh the list
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to update order');
-      }
+      await api.put(endpoints.admin.orders.updateStatus(orderId), updateData);
+      alert('Order updated successfully!');
+      fetchOrders(); // Refresh the list
     } catch (error) {
       console.error('Error updating order:', error);
-      throw error;
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update order';
+      throw new Error(errorMessage);
     }
   };
 

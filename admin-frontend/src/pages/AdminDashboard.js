@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, endpoints } from '../api/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -20,27 +21,9 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      // Get auth token from localStorage
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        console.error('No admin token found');
-        return;
-      }
-      
-      // Fetch admin stats from the backend API
-      const response = await fetch('http://localhost:8000/api/v1/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const statsData = await response.json();
-      setStats(statsData);
+      // Fetch admin stats from the backend API using the configured api instance
+      const response = await api.get(endpoints.admin.stats);
+      setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch admin stats:', error);
       // Fallback to mock data if API fails

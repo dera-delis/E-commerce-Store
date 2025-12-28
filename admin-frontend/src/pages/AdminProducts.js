@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProductModal from '../components/ProductModal';
+import { api, endpoints } from '../api/api';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -17,26 +18,9 @@ const AdminProducts = () => {
       setLoading(true);
       setError(null);
       
-      // Get admin token
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        throw new Error('No admin token found');
-      }
-      
-      // Fetch products from the admin API
-      const response = await fetch('http://localhost:8000/api/v1/admin/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setProducts(data || []);
+      // Fetch products from the admin API using the configured api instance
+      const response = await api.get(endpoints.admin.products.list);
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       setError('Failed to load products. Please try again.');
@@ -57,32 +41,20 @@ const AdminProducts = () => {
 
   const handleSaveProduct = async (productData) => {
     try {
-      const token = localStorage.getItem('admin_token');
-      const url = editingProduct 
-        ? `http://localhost:8000/api/v1/admin/products/${editingProduct.id}`
-        : 'http://localhost:8000/api/v1/admin/products';
-      
-      const method = editingProduct ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(productData)
-      });
-      
-      if (response.ok) {
-        alert(editingProduct ? 'Product updated successfully!' : 'Product created successfully!');
-        fetchProducts(); // Refresh the list
+      if (editingProduct) {
+        // Update existing product
+        await api.put(endpoints.admin.products.update(editingProduct.id), productData);
+        alert('Product updated successfully!');
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to save product');
+        // Create new product
+        await api.post(endpoints.admin.products.create, productData);
+        alert('Product created successfully!');
       }
+      fetchProducts(); // Refresh the list
     } catch (error) {
       console.error('Error saving product:', error);
-      throw error;
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to save product';
+      throw new Error(errorMessage);
     }
   };
 
@@ -90,21 +62,9 @@ const AdminProducts = () => {
   const handleDeleteProduct = async (productId) => {
     if (window.confirm(`Are you sure you want to delete product ${productId}?`)) {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await fetch(`http://localhost:8000/api/v1/admin/products/${productId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          alert('Product deleted successfully!');
-          fetchProducts(); // Refresh the list
-        } else {
-          alert('Failed to delete product');
-        }
+        await api.delete(endpoints.admin.products.delete(productId));
+        alert('Product deleted successfully!');
+        fetchProducts(); // Refresh the list
       } catch (error) {
         console.error('Error deleting product:', error);
         alert('Error deleting product');
