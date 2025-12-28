@@ -162,11 +162,11 @@ const ProductDetail = () => {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="space-y-4">
-            <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg">
+            <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100">
               <img
                 src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
           </div>

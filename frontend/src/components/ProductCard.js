@@ -107,12 +107,12 @@ const ProductCard = ({ product }) => {
   return (
     <div className="product-card group">
       {/* Product Image */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden bg-gray-100">
         <Link to={`/products/${product.id}`}>
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-48 object-contain transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
         

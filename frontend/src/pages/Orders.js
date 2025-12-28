@@ -102,11 +102,13 @@ const Orders = () => {
                       <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center shadow-sm border border-gray-200 flex-shrink-0">
                           {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-14 h-14 object-cover rounded-md"
-                            />
+                            <div className="w-14 h-14 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-full object-contain rounded-md"
+                              />
+                            </div>
                           ) : (
                             <span className="text-gray-400 text-lg">📦</span>
                           )}

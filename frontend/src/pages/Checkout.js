@@ -242,11 +242,13 @@ const Checkout = () => {
               <div className="space-y-3 mb-6">
                 {cartItems.map((item) => (
                   <div key={item.product_id} className="flex items-center space-x-3">
-                    <img
-                      src={item.image_url || 'https://via.placeholder.com/40x40?text=Product'}
-                      alt={item.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
+                    <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                      <img
+                        src={item.image_url || 'https://via.placeholder.com/40x40?text=Product'}
+                        alt={item.name}
+                        className="w-full h-full object-contain rounded"
+                      />
+                    </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
                       <p className="text-sm text-gray-500">Qty: {item.quantity}</p>

@@ -52,11 +52,13 @@ const Cart = () => {
                   <div key={item.product_id} className="p-6 flex items-center space-x-4">
                     <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
                       {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                        <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-contain rounded-lg"
+                          />
+                        </div>
                       ) : (
                         <span className="text-gray-400 text-lg">📦</span>
                       )}

@@ -92,11 +92,13 @@ const CartDrawer = () => {
                 {cartItems.map((item) => (
                   <div key={item.product_id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                     {/* Product Image */}
-                    <img
-                      src={item.image_url || 'https://via.placeholder.com/60x60?text=Product'}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                      <img
+                        src={item.image_url || 'https://via.placeholder.com/60x60?text=Product'}
+                        alt={item.name}
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                    </div>
 
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
