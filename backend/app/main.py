@@ -185,6 +185,34 @@ async def health_check():
         "version": "1.0.0"
     }
 
+# Database initialization endpoint
+@app.post("/api/v1/init-db")
+async def initialize_database():
+    """Manually trigger database table creation and initialization"""
+    try:
+        from app.database import init_db, create_tables
+        from app.database import engine
+        
+        if engine is None:
+            raise HTTPException(status_code=500, detail="Database engine not available")
+        
+        # Create tables
+        create_tables()
+        
+        # Initialize with sample data
+        init_db()
+        
+        return {
+            "status": "success",
+            "message": "Database tables created and initialized successfully"
+        }
+    except Exception as e:
+        import traceback
+        error_msg = f"Database initialization failed: {str(e)}"
+        print(f"❌ {error_msg}", flush=True)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=error_msg)
+
 # CORS test endpoint
 @app.get("/api/v1/cors-test")
 async def cors_test():
