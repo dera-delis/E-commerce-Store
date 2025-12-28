@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 import uvicorn
 import os
 
@@ -97,6 +99,21 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("🛑 Shutting down E-commerce Store Backend...", flush=True)
 
+# Middleware to ensure HTTPS redirects use HTTPS (for Cloud Run)
+class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Check if request is behind a proxy (Cloud Run sets X-Forwarded-Proto)
+        if request.headers.get("X-Forwarded-Proto") == "https":
+            # Force the request URL to use HTTPS
+            request.scope["scheme"] = "https"
+        elif request.url.scheme == "http" and "X-Forwarded-Proto" in request.headers:
+            # If behind proxy and X-Forwarded-Proto is set, use it
+            proto = request.headers.get("X-Forwarded-Proto", "https")
+            request.scope["scheme"] = proto
+        
+        response = await call_next(request)
+        return response
+
 # Create FastAPI app
 app = FastAPI(
     title="E-commerce Store API",
@@ -106,6 +123,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+# Add HTTPS redirect middleware FIRST (before CORS)
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add CORS middleware - TEMPORARILY ALLOW ALL ORIGINS to fix CORS blocking
 # This will be restricted later once we confirm everything works

@@ -182,7 +182,8 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     return url
 
 
-@router.get("/", response_model=ProductList)
+@router.get("", response_model=ProductList)  # No trailing slash
+@router.get("/", response_model=ProductList)  # With trailing slash
 async def get_products(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),

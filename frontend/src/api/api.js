@@ -65,7 +65,7 @@ export const endpoints = {
   
   // Products
   products: {
-    list: '/api/v1/products',
+    list: '/api/v1/products/',  // Add trailing slash to avoid redirect
     detail: (id) => `/api/v1/products/${id}`,
     categories: '/api/v1/products/categories',
     featured: '/api/v1/products/featured',
