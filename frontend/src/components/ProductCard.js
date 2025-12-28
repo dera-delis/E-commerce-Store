@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { api, endpoints } from '../api/api';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -12,34 +13,48 @@ const ProductCard = ({ product }) => {
 
   // Check if product is favorited on component mount
   useEffect(() => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    setIsFavorited(favorites.includes(product.id));
-  }, [product.id]);
+    if (!isAuthenticated) {
+      setIsFavorited(false);
+      return;
+    }
 
-  const handleToggleFavorite = () => {
+    const checkFavorite = async () => {
+      try {
+        const response = await api.get(endpoints.favorites.check(product.id));
+        setIsFavorited(response.data.is_favorited);
+      } catch (error) {
+        console.error('Failed to check favorite status:', error);
+        setIsFavorited(false);
+      }
+    };
+
+    checkFavorite();
+  }, [product.id, isAuthenticated]);
+
+  const handleToggleFavorite = async () => {
     if (!isAuthenticated) {
       // Redirect to login if not authenticated
       window.location.href = '/login';
       return;
     }
 
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    let newFavorites;
-    
-    if (isFavorited) {
-      // Remove from favorites
-      newFavorites = favorites.filter(id => id !== product.id);
-    } else {
-      // Add to favorites
-      newFavorites = [...favorites, product.id];
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await api.delete(endpoints.favorites.remove(product.id));
+        setIsFavorited(false);
+      } else {
+        // Add to favorites
+        await api.post(endpoints.favorites.add(product.id));
+        setIsFavorited(true);
+      }
+      
+      // Dispatch custom event to update header count in real-time
+      window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      // Optionally show error message to user
     }
-    
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
-    console.log('Saved favorites to localStorage:', newFavorites);
-    setIsFavorited(!isFavorited);
-    
-    // Dispatch custom event to update header count in real-time
-    window.dispatchEvent(new CustomEvent('favoritesUpdated'));
   };
 
   const handleAddToCart = async () => {

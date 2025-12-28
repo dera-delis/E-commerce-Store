@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { api, endpoints } from '../api/api';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,29 +37,25 @@ const Header = () => {
   
   // Update favorites count in real-time
   useEffect(() => {
-    const updateFavoritesCount = () => {
-      if (isAuthenticated) {
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        setFavoritesCount(favorites.length);
-      } else {
+    const updateFavoritesCount = async () => {
+      if (!isAuthenticated) {
         setFavoritesCount(0);
-        // Don't clear favorites - let them persist across sessions
+        return;
+      }
+
+      try {
+        const response = await api.get(endpoints.favorites.list);
+        setFavoritesCount(response.data?.length || 0);
+      } catch (error) {
+        console.error('Failed to get favorites count:', error);
+        setFavoritesCount(0);
       }
     };
 
     // Initial update
     updateFavoritesCount();
-
-    // Listen for storage changes (when favorites are updated in other tabs)
-    const handleStorageChange = (e) => {
-      if (e.key === 'favorites') {
-        updateFavoritesCount();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom events (when favorites are updated in same tab)
+    // Listen for custom events (when favorites are updated)
     const handleFavoritesChange = () => {
       updateFavoritesCount();
     };
@@ -66,7 +63,6 @@ const Header = () => {
     window.addEventListener('favoritesUpdated', handleFavoritesChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('favoritesUpdated', handleFavoritesChange);
     };
   }, [isAuthenticated]);

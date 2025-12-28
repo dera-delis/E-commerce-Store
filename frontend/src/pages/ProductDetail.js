@@ -36,34 +36,47 @@ const ProductDetail = () => {
 
   // Check if product is favorited on component mount
   useEffect(() => {
-    if (id) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      setIsFavorited(favorites.includes(id));
+    if (!id || !isAuthenticated) {
+      setIsFavorited(false);
+      return;
     }
-  }, [id]);
 
-  const handleToggleFavorite = () => {
+    const checkFavorite = async () => {
+      try {
+        const response = await api.get(endpoints.favorites.check(id));
+        setIsFavorited(response.data.is_favorited);
+      } catch (error) {
+        console.error('Failed to check favorite status:', error);
+        setIsFavorited(false);
+      }
+    };
+
+    checkFavorite();
+  }, [id, isAuthenticated]);
+
+  const handleToggleFavorite = async () => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
 
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    let newFavorites;
-    
-    if (isFavorited) {
-      // Remove from favorites
-      newFavorites = favorites.filter(favId => favId !== id);
-    } else {
-      // Add to favorites
-      newFavorites = [...favorites, id];
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await api.delete(endpoints.favorites.remove(id));
+        setIsFavorited(false);
+      } else {
+        // Add to favorites
+        await api.post(endpoints.favorites.add(id));
+        setIsFavorited(true);
+      }
+      
+      // Dispatch custom event to update header count in real-time
+      window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      // Optionally show error message to user
     }
-    
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
-    setIsFavorited(!isFavorited);
-    
-    // Dispatch custom event to update header count in real-time
-    window.dispatchEvent(new CustomEvent('favoritesUpdated'));
   };
 
   const handleAddToCart = async () => {

@@ -31,7 +31,7 @@ except Exception as e:
 # Import routers individually with error handling - so one failure doesn't break all
 # CRITICAL: Ensure dependencies are available first
 routers = {}
-router_names = ['auth', 'products', 'cart', 'orders', 'admin', 'upload']
+router_names = ['auth', 'products', 'cart', 'orders', 'admin', 'upload', 'favorites']
 
 # Ensure critical dependencies exist before importing routers
 try:
@@ -174,6 +174,7 @@ router_configs = [
     ("orders", "/api/v1/orders", "Orders"),
     ("admin", "/api/v1/admin", "Admin"),
     ("upload", "/api/v1/upload", "Upload"),
+    ("favorites", "/api/v1/favorites", "Favorites"),
 ]
 
 registered_count = 0

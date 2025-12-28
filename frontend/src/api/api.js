@@ -105,6 +105,14 @@ export const endpoints = {
       updateStatus: (id) => `/api/v1/admin/orders/${id}/status`,
     },
   },
+  
+  // Favorites
+  favorites: {
+    list: '/api/v1/favorites',
+    add: (productId) => `/api/v1/favorites/${productId}`,
+    remove: (productId) => `/api/v1/favorites/${productId}`,
+    check: (productId) => `/api/v1/favorites/check/${productId}`,
+  },
 };
 
 export { api };

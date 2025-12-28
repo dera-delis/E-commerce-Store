@@ -19,8 +19,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is already logged in
     const token = localStorage.getItem('token');
-    console.log('Auth useEffect - token exists:', !!token);
-    console.log('Auth useEffect - favorites before check:', localStorage.getItem('favorites'));
     if (token) {
       checkAuthStatus();
     } else {
@@ -30,14 +28,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      console.log('Checking auth status...');
       const response = await api.get(endpoints.auth.me);
-      console.log('Auth response:', response.data);
-      console.log('Favorites after auth success:', localStorage.getItem('favorites'));
       setUser(response.data);
     } catch (error) {
       console.error('Auth check failed:', error);
-      console.log('Favorites after auth failure:', localStorage.getItem('favorites'));
       localStorage.removeItem('token');
     } finally {
       setLoading(false);
@@ -70,7 +64,6 @@ export const AuthProvider = ({ children }) => {
       const { access_token, ...user } = response.data;
       
       localStorage.setItem('token', access_token);
-      localStorage.removeItem('favorites'); // Clear any previous favorites on signup
       setUser(user);
       setError(null); // Only clear error on successful signup
       
@@ -84,10 +77,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('favorites'); // Clear favorites on logout
     localStorage.removeItem('loginError'); // Clear any stored errors
     setUser(null);
     setError(null);
+    // Note: Favorites are now stored in the database and persist across sessions
   };
 
   const clearError = () => {
@@ -102,9 +95,9 @@ export const AuthProvider = ({ children }) => {
 
   const clearAllUserData = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('favorites');
     setUser(null);
     setError(null);
+    // Note: Favorites are stored in the database and persist across sessions
   };
 
   const value = {

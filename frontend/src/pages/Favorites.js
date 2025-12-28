@@ -13,11 +13,15 @@ const Favorites = () => {
   const [isAdding, setIsAdding] = useState({});
 
   useEffect(() => {
-    loadFavoriteProducts();
+    if (isAuthenticated) {
+      loadFavoriteProducts();
+    }
     
     // Listen for favorites updates
     const handleFavoritesUpdate = () => {
-      loadFavoriteProducts();
+      if (isAuthenticated) {
+        loadFavoriteProducts();
+      }
     };
     
     window.addEventListener('favoritesUpdated', handleFavoritesUpdate);
@@ -25,51 +29,38 @@ const Favorites = () => {
     return () => {
       window.removeEventListener('favoritesUpdated', handleFavoritesUpdate);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const loadFavoriteProducts = async () => {
+    if (!isAuthenticated) {
+      setFavoriteProducts([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      console.log('Loading favorites:', favorites);
-      console.log('localStorage favorites raw:', localStorage.getItem('favorites'));
-      
-      if (favorites.length === 0) {
-        setFavoriteProducts([]);
-        return;
-      }
-
-      // Fetch product details for each favorite
-      const productPromises = favorites.map(async (productId) => {
-        try {
-          console.log(`Fetching product ${productId}...`);
-          const response = await api.get(endpoints.products.detail(productId));
-          console.log(`Product ${productId} loaded:`, response.data);
-          return response.data;
-        } catch (error) {
-          console.error(`Failed to load product ${productId}:`, error);
-          return null;
-        }
-      });
-
-      const products = await Promise.all(productPromises);
-      console.log('All products loaded:', products);
-      setFavoriteProducts(products.filter(product => product !== null));
+      const response = await api.get(endpoints.favorites.list);
+      setFavoriteProducts(response.data || []);
     } catch (error) {
       console.error('Failed to load favorite products:', error);
+      setFavoriteProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleFavorite = (productId) => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const newFavorites = favorites.filter(id => id !== productId);
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
-    setFavoriteProducts(prev => prev.filter(product => product.id !== productId));
-    
-    // Dispatch custom event to update header count
-    window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+  const handleToggleFavorite = async (productId) => {
+    try {
+      await api.delete(endpoints.favorites.remove(productId));
+      setFavoriteProducts(prev => prev.filter(product => product.id !== productId));
+      
+      // Dispatch custom event to update header count
+      window.dispatchEvent(new CustomEvent('favoritesUpdated'));
+    } catch (error) {
+      console.error('Failed to remove favorite:', error);
+      // Optionally show error message to user
+    }
   };
 
   const handleAddToCart = async (product) => {
