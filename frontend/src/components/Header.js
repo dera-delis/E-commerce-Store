@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -13,18 +13,43 @@ const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { cartItems } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Sync search bar with URL parameters when on products page
+  useEffect(() => {
+    if (location.pathname === '/products') {
+      const urlSearchQuery = searchParams.get('search') || '';
+      setSearchQuery(urlSearchQuery);
+    } else {
+      // Keep the search query even when not on products page
+      // This allows users to search from any page
+    }
+  }, [location.pathname, searchParams]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      // Reset all parameters and start fresh search
-      navigate(`/products?page=1&limit=12&sort_by=name&sort_order=asc&search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(''); // Clear search after navigating
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      // Navigate to products page with search query
+      // Works from any page - always goes to /products with search
+      navigate(`/products?page=1&limit=12&sort_by=name&sort_order=asc&search=${encodeURIComponent(trimmedQuery)}`);
+      // Don't clear search - keep it visible so user knows what they searched for
+    } else {
+      // If search is empty, navigate to products page without search
+      navigate('/products?page=1&limit=12&sort_by=name&sort_order=asc');
     }
   };
 
   const clearSearch = () => {
     setSearchQuery('');
+    // If on products page, also clear from URL
+    if (location.pathname === '/products') {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('search');
+      newParams.set('page', '1');
+      navigate(`/products?${newParams.toString()}`);
+    }
   };
 
   const handleLogout = () => {
