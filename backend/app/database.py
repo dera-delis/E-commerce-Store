@@ -130,14 +130,31 @@ def init_db():
                 ]
                 
                 for user_data in sample_users:
-                    user = User(
-                        id=user_data["id"],
-                        email=user_data["email"],
-                        name=user_data["name"],
-                        password_hash=pwd_context.hash(user_data["password"]),
-                        role=user_data["role"]
-                    )
-                    db.add(user)
+                    try:
+                        # Ensure password is a string and encode it properly
+                        password_str = str(user_data["password"])
+                        # Truncate to 72 bytes if needed (bcrypt limit)
+                        if len(password_str.encode('utf-8')) > 72:
+                            password_str = password_str[:72]
+                        
+                        # Hash the password
+                        password_hash = pwd_context.hash(password_str)
+                        
+                        user = User(
+                            id=user_data["id"],
+                            email=user_data["email"],
+                            name=user_data["name"],
+                            password_hash=password_hash,
+                            role=user_data["role"]
+                        )
+                        db.add(user)
+                        print(f"✅ Added user: {user_data['email']}", flush=True)
+                    except Exception as e:
+                        print(f"❌ Error adding user {user_data['email']}: {e}", flush=True)
+                        import traceback
+                        traceback.print_exc()
+                        # Continue with next user
+                        continue
             
             db.commit()
             print("✅ Database initialized with sample data", flush=True)
