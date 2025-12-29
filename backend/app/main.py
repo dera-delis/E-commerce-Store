@@ -193,9 +193,61 @@ for router_name, prefix, tag in router_configs:
 
 print(f"✅ Registered {registered_count}/{len(router_configs)} routers successfully", flush=True)
 
-# Mount static files for uploads
+# Route to serve images from GCS for /uploads/{filename} requests
+# This handles cases where products have relative /uploads/ URLs but files are in GCS
+@app.get("/uploads/{filename:path}")
+async def serve_upload_from_gcs(filename: str):
+    """Serve uploaded images from GCS when requested via /uploads/ path"""
+    try:
+        GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+        if not GCS_BUCKET_NAME:
+            # If GCS not configured, try local filesystem fallback
+            file_path = os.path.join("uploads", filename)
+            if os.path.exists(file_path):
+                from fastapi.responses import FileResponse
+                return FileResponse(file_path)
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        # Serve from GCS
+        from google.cloud import storage
+        from fastapi.responses import RedirectResponse
+        
+        client = storage.Client()
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(f"uploads/{filename}")
+        
+        # Check if blob exists
+        if not blob.exists():
+            raise HTTPException(status_code=404, detail="Image not found in storage")
+        
+        # Try to get public URL first
+        try:
+            blob.reload()
+            if blob.public_url:
+                return RedirectResponse(url=blob.public_url, status_code=302)
+        except:
+            pass
+        
+        # If not public, generate signed URL
+        from datetime import timedelta
+        signed_url = blob.generate_signed_url(
+            expiration=timedelta(days=365),
+            method='GET'
+        )
+        return RedirectResponse(url=signed_url, status_code=302)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error serving image from GCS: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to serve image: {str(e)}")
+
+# Mount static files for uploads (fallback for local development)
 if os.path.exists("uploads"):
-    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    try:
+        app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not mount static files: {e}", flush=True)
 
 # Health check endpoint
 @app.get("/health")
