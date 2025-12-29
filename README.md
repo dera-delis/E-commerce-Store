@@ -149,23 +149,19 @@ graph TB
     subgraph "Backend Layer"
         C[FastAPI Server<br/>localhost:8000]
         D[PostgreSQL Database]
-        E[Redis Cache]
     end
     
     subgraph "Infrastructure"
         F[Docker Containers]
-        G[Nginx Load Balancer]
     end
     
     A --> C
     B --> C
     C --> D
-    C --> E
     F --> A
     F --> B
     F --> C
     F --> D
-    F --> E
 ```
 
 ## 🛠️ **Tech Stack**
@@ -181,15 +177,13 @@ graph TB
 - **FastAPI** - Modern Python web framework
 - **SQLAlchemy** - Python ORM
 - **PostgreSQL** - Relational database
-- **Redis** - In-memory data store
 - **JWT** - Authentication tokens
 - **Pydantic** - Data validation
 
 ### **DevOps & Infrastructure**
 - **Docker** - Containerization
 - **Docker Compose** - Multi-container orchestration
-- **Nginx** - Web server and reverse proxy
-- **Google Cloud Run** - Serverless container platform
+- **Google Cloud Run** - Serverless container platform with managed HTTP routing
 - **Google Cloud Storage** - Persistent image storage
 - **Cloud SQL (PostgreSQL)** - Managed database service
 - **Cloud Build** - CI/CD pipeline
@@ -387,16 +381,16 @@ CREATE TABLE order_items (
 | **Database Indexing** | Optimized queries | 90% faster |
 | **Image Compression** | WebP format | 60% smaller |
 | **Code Splitting** | Lazy loading | 40% faster load |
-| **Caching** | Redis layer | 80% faster API |
 | **CDN Ready** | Static assets | Global delivery |
 | **Bundle Optimization** | Tree shaking | 30% smaller |
+| **Connection Pooling** | Cloud SQL optimization | Reduced latency |
 
 ## 🧪 **Testing**
 
 ### **Backend API Testing**
 ```bash
 # Test health endpoint
-curl http://localhost:8000/api/health
+curl http://localhost:8000/health
 
 # Test version endpoint
 curl http://localhost:8000/api/version
@@ -418,23 +412,6 @@ curl http://localhost:8000/api/v1/products
 3. Test product management (CRUD operations)
 4. Test order management and updates
 5. Verify real-time synchronization
-
-## 📈 **Performance Features**
-
-- **Lazy Loading** - Images and components load on demand
-- **Caching** - Redis for session and data caching
-- **Database Indexing** - Optimized queries with proper indexes
-- **Image Optimization** - Compressed and responsive images
-- **Code Splitting** - Optimized bundle sizes
-
-## 🔒 **Security Features**
-
-- **JWT Authentication** - Secure token-based authentication
-- **Password Hashing** - bcrypt for password security
-- **CORS Protection** - Configured cross-origin policies
-- **Input Validation** - Pydantic models for data validation
-- **SQL Injection Prevention** - SQLAlchemy ORM protection
-- **Role-based Access** - Admin and customer role separation
 
 ## 🚀 **Deployment**
 
@@ -527,7 +504,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Dera Delis**
 - GitHub: [@dera-delis](https://github.com/dera-delis)
 - LinkedIn: [Dera Delis](https://www.linkedin.com/in/dera-delis/)
-- WhatsApp: +234 704 907 3197
 
 ## 🙏 **Acknowledgments**
 
