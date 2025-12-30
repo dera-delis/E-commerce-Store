@@ -50,44 +50,8 @@ def check_admin_role(user_id: str, db: Session) -> bool:
     user = db.query(UserModel).filter(UserModel.id == user_id).first()
     return user and user.role == "admin"
 
-def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[str]:
-    """Normalize image URLs to avoid mixed content and host mismatches.
-    - Force https for any http URLs not pointing to localhost
-    - Rewrite localhost/0.0.0.0/127.0.0.1 to current request host
-    - Prefix relative '/uploads' with current host and scheme
-    """
-    if not raw_url:
-        return raw_url
-
-    url = raw_url.strip()
-    base = str(request.base_url).rstrip('/')
-
-    # Relative upload path
-    if url.startswith('/uploads'):
-        return f"{base}{url}"
-
-    # Localhost variants -> current host
-    localhost_prefixes = (
-        'http://localhost', 'http://127.0.0.1', 'http://0.0.0.0',
-        'https://localhost', 'https://127.0.0.1', 'https://0.0.0.0',
-    )
-    if url.startswith(localhost_prefixes):
-        # keep path/query, replace origin with current base
-        try:
-            from urllib.parse import urlparse
-            parsed = urlparse(url)
-            path_and_query = parsed.path or ''
-            if parsed.query:
-                path_and_query += f"?{parsed.query}"
-            return f"{base}{path_and_query}"
-        except Exception:
-            return base
-
-    # Generic http -> https
-    if url.startswith('http://'):
-        return 'https://' + url[len('http://'):]
-
-    return url
+# Import the shared normalization function from products router
+from app.routers.products import _normalize_image_url
 
 @router.get("/stats", response_model=AdminStats)
 async def get_admin_stats(current_user_id: str = Depends(verify_token), db: Session = Depends(get_db)):
