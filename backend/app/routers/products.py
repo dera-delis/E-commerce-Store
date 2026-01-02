@@ -179,16 +179,22 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
                     
                     print(f"🔍 Checking GCS for image: {blob_path} in bucket {GCS_BUCKET_NAME}", flush=True)
                     
-                    # Try to get public URL first (fastest path)
-                    try:
-                        blob.reload()
-                        if blob.public_url:
-                            print(f"✅ Using public GCS URL: {blob.public_url}", flush=True)
-                            return blob.public_url
-                    except Exception as pub_err:
-                        print(f"⚠️ Could not get public URL (will try signed URL): {pub_err}", flush=True)
+                    # Construct public URL directly (fastest and most reliable for public buckets)
+                    # Format: https://storage.googleapis.com/{bucket}/{path}
+                    public_url = f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{blob_path}"
+                    print(f"✅ Constructed public GCS URL: {public_url}", flush=True)
                     
-                    # Try to generate signed URL (works even if blob is not public)
+                    # Verify the blob exists (quick check)
+                    try:
+                        if blob.exists():
+                            print(f"✅ Blob exists, using public URL", flush=True)
+                            return public_url
+                        else:
+                            print(f"⚠️ Blob does not exist, will try signed URL", flush=True)
+                    except Exception as exists_err:
+                        print(f"⚠️ Could not verify blob existence, trying signed URL: {exists_err}", flush=True)
+                    
+                    # If blob doesn't exist or check failed, try signed URL as fallback
                     try:
                         signed_url = blob.generate_signed_url(
                             expiration=timedelta(days=365),
@@ -198,12 +204,9 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
                         return signed_url
                     except Exception as sign_err:
                         print(f"⚠️ Could not generate signed URL: {sign_err}", flush=True)
-                        # Check if blob exists as a diagnostic
-                        try:
-                            blob_exists = blob.exists()
-                            print(f"   Diagnostic: Blob exists check: {blob_exists}", flush=True)
-                        except Exception as exists_err:
-                            print(f"   Diagnostic: Error checking blob existence: {exists_err}", flush=True)
+                        # Still return the public URL as it might work even if blob.exists() failed
+                        print(f"📎 Returning public URL anyway: {public_url}", flush=True)
+                        return public_url
                         
                 except Exception as e:
                     # If GCS lookup fails, fall back to backend URL
