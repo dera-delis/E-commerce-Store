@@ -144,9 +144,10 @@ mock_categories = [
 
 def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[str]:
     """Normalize image URLs to avoid mixed content and host mismatches.
+    - If GCS is configured and URL is /uploads/ path, return GCS URL directly
     - Force https for any http URLs not pointing to localhost
     - Rewrite localhost/0.0.0.0/127.0.0.1 to current request host
-    - Prefix relative '/uploads' with current host and scheme
+    - Prefix relative '/uploads' with current host and scheme (if GCS not configured)
     """
     if not raw_url:
         return raw_url
@@ -154,8 +155,43 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     url = raw_url.strip()
     base = str(request.base_url).rstrip('/')
 
-    # Relative upload path
+    # Relative upload path - try to get GCS URL directly if GCS is configured
     if url.startswith('/uploads'):
+        import os
+        GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+        if GCS_BUCKET_NAME:
+            # Extract filename from path (e.g., "/uploads/filename.jpg" -> "filename.jpg")
+            filename = url.replace('/uploads/', '').lstrip('/')
+            if filename:
+                try:
+                    from google.cloud import storage
+                    from datetime import timedelta
+                    
+                    client = storage.Client()
+                    bucket = client.bucket(GCS_BUCKET_NAME)
+                    blob = bucket.blob(f"uploads/{filename}")
+                    
+                    # Check if blob exists
+                    if blob.exists():
+                        # Try to get public URL first
+                        try:
+                            blob.reload()
+                            if blob.public_url:
+                                return blob.public_url
+                        except:
+                            pass
+                        
+                        # If not public, generate signed URL
+                        signed_url = blob.generate_signed_url(
+                            expiration=timedelta(days=365),
+                            method='GET'
+                        )
+                        return signed_url
+                except Exception as e:
+                    # If GCS lookup fails, fall back to backend URL
+                    print(f"⚠️ Could not get GCS URL for {filename}: {e}", flush=True)
+        
+        # Fallback to backend URL if GCS not configured or lookup failed
         return f"{base}{url}"
 
     # Localhost variants -> current host
