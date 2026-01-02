@@ -460,7 +460,7 @@ DATABASE_URL=postgresql://user:password@/ecommerce?host=/cloudsql/instance
 JWT_SECRET_KEY=production-secret-key
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-GCS_BUCKET_NAME=ecommerce-store-uploads
+GCS_BUCKET_NAME=ecommerce-store-product-images
 CORS_ORIGINS=https://ecommerce-frontend-192614808954.us-central1.run.app,https://ecommerce-admin-frontend-192614808954.us-central1.run.app
 ```
 
