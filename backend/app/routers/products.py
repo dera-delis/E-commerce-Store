@@ -191,19 +191,9 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
                     blob = bucket.blob(blob_path)
                     print(f"   Blob path: {blob_path}", flush=True)
                     
-                    # Try to get public URL first (if blob is public)
-                    try:
-                        print(f"   Checking if blob is public...", flush=True)
-                        blob.reload()
-                        if blob.public_url:
-                            print(f"✅ Using public GCS URL: {blob.public_url}", flush=True)
-                            return blob.public_url
-                        else:
-                            print(f"   Blob is not public, generating signed URL...", flush=True)
-                    except Exception as pub_err:
-                        print(f"   Could not check public status: {pub_err}, generating signed URL...", flush=True)
-                    
-                    # If not public, generate signed URL (works for private blobs)
+                    # Always generate signed URL (blobs are private, public URLs don't work)
+                    # Signed URLs work for private blobs and don't require Google Cloud login
+                    print(f"   Generating signed URL for private blob...", flush=True)
                     signed_url = blob.generate_signed_url(
                         expiration=timedelta(days=365),
                         method='GET'
