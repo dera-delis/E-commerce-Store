@@ -191,20 +191,11 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
                     blob = bucket.blob(blob_path)
                     print(f"   Blob path: {blob_path}", flush=True)
                     
-                    # Try to make blob public first, then use public URL
-                    # This is the simplest solution - make images public so they can be accessed directly
-                    try:
-                        print(f"   Attempting to make blob public...", flush=True)
-                        blob.make_public()
-                        public_url = f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{blob_path}"
-                        print(f"✅ Made blob public, using public URL: {public_url}", flush=True)
-                        return public_url
-                    except Exception as make_public_err:
-                        print(f"   Could not make blob public: {make_public_err}", flush=True)
-                        # If making public fails, try to use the public URL anyway (might already be public)
-                        public_url = f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{blob_path}"
-                        print(f"📎 Using public URL format anyway: {public_url}", flush=True)
-                        return public_url
+                    # Use public URL directly (bucket is already public, no need to make blobs public)
+                    # This is much faster - just construct the URL without API calls
+                    public_url = f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{blob_path}"
+                    print(f"✅ Using public GCS URL: {public_url}", flush=True)
+                    return public_url
                 except Exception as e:
                     print(f"❌ ERROR getting GCS URL for {filename}: {e}", flush=True)
                     import traceback
