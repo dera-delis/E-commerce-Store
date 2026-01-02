@@ -168,12 +168,35 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
             # Extract filename from path (e.g., "/uploads/filename.jpg" -> "filename.jpg")
             filename = url.replace('/uploads/', '').lstrip('/')
             if filename:
-                # Construct public URL directly (fastest and most reliable for public buckets)
-                # Format: https://storage.googleapis.com/{bucket}/{path}
-                blob_path = f"uploads/{filename}"
-                public_url = f"https://storage.googleapis.com/{GCS_BUCKET_NAME}/{blob_path}"
-                print(f"✅ Returning public GCS URL: {public_url}", flush=True)
-                return public_url
+                try:
+                    from google.cloud import storage
+                    from datetime import timedelta
+                    
+                    client = storage.Client()
+                    bucket = client.bucket(GCS_BUCKET_NAME)
+                    blob_path = f"uploads/{filename}"
+                    blob = bucket.blob(blob_path)
+                    
+                    # Try to get public URL first (if blob is public)
+                    try:
+                        blob.reload()
+                        if blob.public_url:
+                            print(f"✅ Using public GCS URL: {blob.public_url}", flush=True)
+                            return blob.public_url
+                    except:
+                        pass
+                    
+                    # If not public, generate signed URL (works for private blobs)
+                    signed_url = blob.generate_signed_url(
+                        expiration=timedelta(days=365),
+                        method='GET'
+                    )
+                    print(f"✅ Using signed GCS URL (length: {len(signed_url)})", flush=True)
+                    return signed_url
+                except Exception as e:
+                    print(f"⚠️ Could not get GCS URL for {filename}: {e}", flush=True)
+                    import traceback
+                    traceback.print_exc()
         else:
             print(f"ℹ️ GCS not configured, using backend URL for {url}", flush=True)
         
