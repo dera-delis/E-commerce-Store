@@ -164,27 +164,34 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     if url.startswith('/uploads'):
         import os
         GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+        print(f"🔍 Normalizing /uploads URL: {url}, GCS_BUCKET_NAME: {GCS_BUCKET_NAME}", flush=True)
         if GCS_BUCKET_NAME:
             # Extract filename from path (e.g., "/uploads/filename.jpg" -> "filename.jpg")
             filename = url.replace('/uploads/', '').lstrip('/')
+            print(f"   Extracted filename: {filename}", flush=True)
             if filename:
                 try:
                     from google.cloud import storage
                     from datetime import timedelta
                     
+                    print(f"   Creating GCS client...", flush=True)
                     client = storage.Client()
                     bucket = client.bucket(GCS_BUCKET_NAME)
                     blob_path = f"uploads/{filename}"
                     blob = bucket.blob(blob_path)
+                    print(f"   Blob path: {blob_path}", flush=True)
                     
                     # Try to get public URL first (if blob is public)
                     try:
+                        print(f"   Checking if blob is public...", flush=True)
                         blob.reload()
                         if blob.public_url:
                             print(f"✅ Using public GCS URL: {blob.public_url}", flush=True)
                             return blob.public_url
-                    except:
-                        pass
+                        else:
+                            print(f"   Blob is not public, generating signed URL...", flush=True)
+                    except Exception as pub_err:
+                        print(f"   Could not check public status: {pub_err}, generating signed URL...", flush=True)
                     
                     # If not public, generate signed URL (works for private blobs)
                     signed_url = blob.generate_signed_url(
@@ -194,11 +201,11 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
                     print(f"✅ Using signed GCS URL (length: {len(signed_url)})", flush=True)
                     return signed_url
                 except Exception as e:
-                    print(f"⚠️ Could not get GCS URL for {filename}: {e}", flush=True)
+                    print(f"❌ ERROR getting GCS URL for {filename}: {e}", flush=True)
                     import traceback
                     traceback.print_exc()
         else:
-            print(f"ℹ️ GCS not configured, using backend URL for {url}", flush=True)
+            print(f"⚠️ GCS not configured (GCS_BUCKET_NAME is empty), using backend URL for {url}", flush=True)
         
         # Fallback to backend URL if GCS not configured or lookup failed
         backend_url = f"{base}{url}"
