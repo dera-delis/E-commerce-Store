@@ -163,6 +163,13 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
         print(f"✅ URL is already a GCS URL: {url[:100]}...", flush=True)
         return url
 
+    # Extract /uploads/ path from full backend URLs (e.g., "https://backend.../uploads/file.jpg" -> "/uploads/file.jpg")
+    if '/uploads/' in url:
+        # Extract just the /uploads/... part
+        uploads_index = url.find('/uploads/')
+        url = url[uploads_index:]
+        print(f"   Extracted /uploads path from full URL: {url}", flush=True)
+
     # Relative upload path - try to get GCS URL directly if GCS is configured
     if url.startswith('/uploads'):
         import os
