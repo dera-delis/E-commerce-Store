@@ -149,11 +149,14 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     - Rewrite localhost/0.0.0.0/127.0.0.1 to current request host
     - Prefix relative '/uploads' with current host and scheme (if GCS not configured)
     """
+    print(f"🔍 _normalize_image_url called with: {raw_url}", flush=True)
     if not raw_url:
+        print(f"   raw_url is None/empty, returning as-is", flush=True)
         return raw_url
 
     url = raw_url.strip()
     base = str(request.base_url).rstrip('/')
+    print(f"   Processing URL: '{url}', base: '{base}'", flush=True)
 
     # If URL is already a full GCS URL, return it as-is
     if url.startswith('https://storage.googleapis.com') or url.startswith('https://storage.cloud.google.com'):
