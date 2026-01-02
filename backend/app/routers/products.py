@@ -155,6 +155,11 @@ def _normalize_image_url(raw_url: Optional[str], request: Request) -> Optional[s
     url = raw_url.strip()
     base = str(request.base_url).rstrip('/')
 
+    # If URL is already a full GCS URL, return it as-is
+    if url.startswith('https://storage.googleapis.com') or url.startswith('https://storage.cloud.google.com'):
+        print(f"✅ URL is already a GCS URL: {url[:100]}...", flush=True)
+        return url
+
     # Relative upload path - try to get GCS URL directly if GCS is configured
     if url.startswith('/uploads'):
         import os
