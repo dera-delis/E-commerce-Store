@@ -4,7 +4,7 @@ import axios from 'axios';
 // Production: Cloud Run backend URL
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://ecommerce-backend-192614808954.us-central1.run.app'),
-  timeout: 10000,
+  timeout: 60000, // 60 seconds - needed for image normalization with many products
   headers: {
     'Content-Type': 'application/json',
   },
